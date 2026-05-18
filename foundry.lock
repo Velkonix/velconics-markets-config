@@ -1,11 +1,11 @@
 {
-  "lib/K613-Protocol": {
-    "rev": "7974591806e1b6c760a83a7c18f6724ed8964f44"
-  },
   "lib/forge-std": {
     "tag": {
       "name": "v1.14.0",
       "rev": "1801b0541f4fda118a10798fd3486bb7051c5dd6"
     }
+  },
+  "lib/velkonix-contracts": {
+    "rev": "94673cca789c4ad4b3dbf78d91154820c82ca54b"
   }
 }

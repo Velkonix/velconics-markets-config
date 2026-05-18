@@ -2,8 +2,8 @@
 pragma solidity ^0.8.30;
 
 import {Script, console} from "forge-std/Script.sol";
-import {IPoolConfigurator} from "lib/K613-Protocol/src/contracts/interfaces/IPoolConfigurator.sol";
-import {MonadMainnet} from "../../src/networks/MonadMainnet.sol";
+import {IPoolConfigurator} from "lib/velkonix-contracts/src/contracts/interfaces/IPoolConfigurator.sol";
+import {MegaEthMainnet} from "../../src/networks/MegaEthMainnet.sol";
 
 /// @title ExecuteEmergencyPayload
 /// @notice Freeze / unfreeze / pause / unpause a single reserve directly via PoolConfigurator.
@@ -20,7 +20,7 @@ contract ExecuteEmergencyPayload is Script {
         string memory action = vm.envString("EMERGENCY_ACTION");
         address asset = vm.envAddress("EMERGENCY_ASSET");
 
-        IPoolConfigurator cfg = IPoolConfigurator(MonadMainnet.POOL_CONFIGURATOR);
+        IPoolConfigurator cfg = IPoolConfigurator(MegaEthMainnet.POOL_CONFIGURATOR);
 
         vm.startBroadcast();
 

@@ -3,7 +3,7 @@ pragma solidity ^0.8.30;
 
 import {Test, console} from "forge-std/Test.sol";
 import {NetworkConfig} from "../src/networks/NetworkConfig.sol";
-import {MonadMainnet} from "../src/networks/MonadMainnet.sol";
+import {MegaEthMainnet} from "../src/networks/MegaEthMainnet.sol";
 
 /// @title MockPoolAddressesProvider
 /// @notice Mock for testing NetworkConfig.getPoolConfigurator fallback
@@ -60,8 +60,8 @@ contract NetworkConfigExtendedTest is Test {
         assertEq(result, mockConfigurator, "Should return configurator from provider");
     }
 
-    function test_MonadMainnetGetAddresses() public pure {
-        NetworkConfig.Addresses memory addrs = MonadMainnet.getAddresses();
+    function test_MegaEthMainnetGetAddresses() public pure {
+        NetworkConfig.Addresses memory addrs = MegaEthMainnet.getAddresses();
 
         assertNotEq(addrs.poolAddressesProvider, address(0), "PoolAddressesProvider should be set");
         assertNotEq(addrs.pool, address(0), "Pool should be set");
@@ -76,7 +76,7 @@ contract NetworkConfigExtendedTest is Test {
     }
 
     function test_NetworkConfigAddressesStructure() public pure {
-        NetworkConfig.Addresses memory addrs = MonadMainnet.getAddresses();
+        NetworkConfig.Addresses memory addrs = MegaEthMainnet.getAddresses();
 
         assertNotEq(addrs.poolAddressesProvider, address(0), "PoolAddressesProvider should be set");
         assertNotEq(addrs.pool, address(0), "Pool should be set");

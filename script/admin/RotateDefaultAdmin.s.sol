@@ -2,7 +2,7 @@
 pragma solidity ^0.8.30;
 
 import {Script, console} from "forge-std/Script.sol";
-import {MonadMainnet} from "../../src/networks/MonadMainnet.sol";
+import {MegaEthMainnet} from "../../src/networks/MegaEthMainnet.sol";
 
 interface IAccessControl {
     function DEFAULT_ADMIN_ROLE() external view returns (bytes32);
@@ -12,7 +12,7 @@ interface IAccessControl {
 }
 
 /// @title RotateDefaultAdmin
-/// @notice Rotate `DEFAULT_ADMIN_ROLE` on the Monad ACLManager from deployer to the main multisig.
+/// @notice Rotate `DEFAULT_ADMIN_ROLE` on the MegaETH ACLManager from deployer to the main multisig.
 /// @dev Two-mode safety pattern matching `GrantRoles`:
 ///        ROTATE_MODE=grantOnly     — grant role to multisig, deployer keeps it for rollback safety.
 ///        ROTATE_MODE=grantRenounce — grant to multisig (idempotent) AND renounce on deployer.
@@ -44,7 +44,7 @@ contract RotateDefaultAdmin is Script {
             revert UnknownMode(mode);
         }
 
-        IAccessControl acl = IAccessControl(MonadMainnet.ACL_MANAGER);
+        IAccessControl acl = IAccessControl(MegaEthMainnet.ACL_MANAGER);
         bytes32 adminRole = acl.DEFAULT_ADMIN_ROLE();
 
         address deployer;
@@ -62,7 +62,7 @@ contract RotateDefaultAdmin is Script {
         if (deployer == mainMultisig) revert DeployerEqualsMultisig();
         if (!acl.hasRole(adminRole, deployer)) revert DeployerLacksDefaultAdmin();
 
-        console.log("ACLManager:", MonadMainnet.ACL_MANAGER);
+        console.log("ACLManager:", MegaEthMainnet.ACL_MANAGER);
         console.log("Deployer:", deployer);
         console.log("Main multisig:", mainMultisig);
         console.log("Mode:", mode);

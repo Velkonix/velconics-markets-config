@@ -3,13 +3,13 @@ pragma solidity ^0.8.30;
 
 import {Test, console} from "forge-std/Test.sol";
 import {NetworkConfig} from "../src/networks/NetworkConfig.sol";
-import {MonadMainnet} from "../src/networks/MonadMainnet.sol";
+import {MegaEthMainnet} from "../src/networks/MegaEthMainnet.sol";
 
 /// @title NetworkConfigTest
 /// @notice Tests for network configuration libraries
 contract NetworkConfigTest is Test {
-    function test_MonadMainnetAddresses() public pure {
-        NetworkConfig.Addresses memory addrs = MonadMainnet.getAddresses();
+    function test_MegaEthMainnetAddresses() public pure {
+        NetworkConfig.Addresses memory addrs = MegaEthMainnet.getAddresses();
 
         assertNotEq(addrs.poolAddressesProvider, address(0), "PoolAddressesProvider should be set");
         assertNotEq(addrs.pool, address(0), "Pool should be set");
@@ -22,25 +22,25 @@ contract NetworkConfigTest is Test {
         assertNotEq(addrs.defaultInterestRateStrategy, address(0), "DefaultInterestRateStrategy should be set");
     }
 
-    function test_MonadMainnetGetPoolConfigurator() public view {
-        address configurator = MonadMainnet.getPoolConfigurator();
+    function test_MegaEthMainnetGetPoolConfigurator() public view {
+        address configurator = MegaEthMainnet.getPoolConfigurator();
         assertNotEq(configurator, address(0), "PoolConfigurator should not be zero");
-        assertEq(configurator, MonadMainnet.POOL_CONFIGURATOR, "Should return POOL_CONFIGURATOR constant");
+        assertEq(configurator, MegaEthMainnet.POOL_CONFIGURATOR, "Should return POOL_CONFIGURATOR constant");
     }
 
     function test_NetworkConfigGetPoolConfigurator() public view {
-        NetworkConfig.Addresses memory addrs = MonadMainnet.getAddresses();
+        NetworkConfig.Addresses memory addrs = MegaEthMainnet.getAddresses();
         address configurator = NetworkConfig.getPoolConfigurator(addrs);
-        assertEq(configurator, MonadMainnet.POOL_CONFIGURATOR, "Should return POOL_CONFIGURATOR when set");
+        assertEq(configurator, MegaEthMainnet.POOL_CONFIGURATOR, "Should return POOL_CONFIGURATOR when set");
     }
 
-    function test_MonadMainnetConstants() public pure {
+    function test_MegaEthMainnetConstants() public pure {
         assertEq(
-            MonadMainnet.POOL_ADDRESSES_PROVIDER,
-            0x1f6E754C6F7A49e2d69e5341d65EcB8f8506C69c,
+            MegaEthMainnet.POOL_ADDRESSES_PROVIDER,
+            0x4E293100F46889B21a12C5884551FF340AD8d7b9,
             "POOL_ADDRESSES_PROVIDER should match"
         );
-        assertEq(MonadMainnet.POOL, 0x4Ba3856a4d851d39C27e2E866daB7A95eF6e0113, "POOL should match");
-        assertEq(MonadMainnet.ORACLE, 0x0dFfb00A751a74ac8CF8B022Bf86b1ECd9D7ae6F, "ORACLE should match");
+        assertEq(MegaEthMainnet.POOL, 0x202FC1FEf70C8a7001f1579518e9288A547C12Ee, "POOL should match");
+        assertEq(MegaEthMainnet.ORACLE, 0xfE7FCB1814Cb025149a938eDC85CE28BC71ce836, "ORACLE should match");
     }
 }

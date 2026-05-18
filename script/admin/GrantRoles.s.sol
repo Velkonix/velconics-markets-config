@@ -2,8 +2,8 @@
 pragma solidity ^0.8.30;
 
 import {Script, console} from "forge-std/Script.sol";
-import {IACLManager} from "lib/K613-Protocol/src/contracts/interfaces/IACLManager.sol";
-import {MonadMainnet} from "../../src/networks/MonadMainnet.sol";
+import {IACLManager} from "lib/velkonix-contracts/src/contracts/interfaces/IACLManager.sol";
+import {MegaEthMainnet} from "../../src/networks/MegaEthMainnet.sol";
 
 interface IOwnable {
     function owner() external view returns (address);
@@ -32,7 +32,7 @@ contract GrantRoles is Script {
             revert UnknownMode(mode);
         }
 
-        IACLManager acl = IACLManager(MonadMainnet.ACL_MANAGER);
+        IACLManager acl = IACLManager(MegaEthMainnet.ACL_MANAGER);
 
         address deployer;
         uint256 pk;
@@ -81,8 +81,8 @@ contract GrantRoles is Script {
         }
         if (!acl.isEmergencyAdmin(emergencyHot)) revert MultisigGrantFailed("EMERGENCY_ADMIN");
 
-        _transferIfNeeded(MonadMainnet.POOL_ADDRESSES_PROVIDER, mainMultisig, "PoolAddressesProvider");
-        _transferIfNeeded(MonadMainnet.EMISSION_MANAGER, mainMultisig, "EmissionManager");
+        _transferIfNeeded(MegaEthMainnet.POOL_ADDRESSES_PROVIDER, mainMultisig, "PoolAddressesProvider");
+        _transferIfNeeded(MegaEthMainnet.EMISSION_MANAGER, mainMultisig, "EmissionManager");
 
         if (revoke) {
             console.log("");

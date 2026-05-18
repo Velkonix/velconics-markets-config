@@ -2,11 +2,11 @@
 pragma solidity ^0.8.30;
 
 import {Script, console} from "forge-std/Script.sol";
-import {IACLManager} from "lib/K613-Protocol/src/contracts/interfaces/IACLManager.sol";
-import {K613PayloadMonad} from "../../src/payloads/K613PayloadMonad.sol";
-import {K613Monad_InitialListing} from "../../src/payloads/K613Monad_InitialListing.sol";
-import {K613Monad_ConfigureEModes} from "../../src/payloads/K613Monad_ConfigureEModes.sol";
-import {MonadMainnet} from "../../src/networks/MonadMainnet.sol";
+import {IACLManager} from "lib/velkonix-contracts/src/contracts/interfaces/IACLManager.sol";
+import {K613PayloadMegaEth} from "../../src/payloads/K613PayloadMegaEth.sol";
+import {K613MegaEth_InitialListing} from "../../src/payloads/K613MegaEth_InitialListing.sol";
+import {K613MegaEth_ConfigureEModes} from "../../src/payloads/K613MegaEth_ConfigureEModes.sol";
+import {MegaEthMainnet} from "../../src/networks/MegaEthMainnet.sol";
 
 /// @title ExecutePayload
 /// @notice Deploys and executes a config-engine payload via temporary POOL_ADMIN grant.
@@ -22,12 +22,12 @@ contract ExecutePayload is Script {
 
         vm.startBroadcast();
 
-        K613PayloadMonad payload;
+        K613PayloadMegaEth payload;
         bytes32 h = keccak256(bytes(name));
         if (h == keccak256("InitialListing")) {
-            payload = new K613Monad_InitialListing();
+            payload = new K613MegaEth_InitialListing();
         } else if (h == keccak256("ConfigureEModes")) {
-            payload = new K613Monad_ConfigureEModes();
+            payload = new K613MegaEth_ConfigureEModes();
         } else {
             revert UnknownPayload(name);
         }
@@ -35,7 +35,7 @@ contract ExecutePayload is Script {
         console.log("Payload:", name);
         console.log("Deployed at:", address(payload));
 
-        IACLManager acl = IACLManager(MonadMainnet.ACL_MANAGER);
+        IACLManager acl = IACLManager(MegaEthMainnet.ACL_MANAGER);
 
         acl.addPoolAdmin(address(payload));
         console.log("Temporary POOL_ADMIN granted to payload");
