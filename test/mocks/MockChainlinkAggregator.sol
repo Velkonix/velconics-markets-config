@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.30;
 
-import {AggregatorInterface} from "lib/K613-Protocol/src/contracts/dependencies/chainlink/AggregatorInterface.sol";
+import {AggregatorInterface} from "lib/velkonix-contracts/src/contracts/dependencies/chainlink/AggregatorInterface.sol";
 
 contract MockChainlinkAggregator is AggregatorInterface {
     uint8 internal immutable dec;

@@ -2,24 +2,26 @@
 pragma solidity ^0.8.30;
 
 import {Script, console} from "forge-std/Script.sol";
-import {IPool} from "lib/K613-Protocol/src/contracts/interfaces/IPool.sol";
-import {IPoolDataProvider} from "lib/K613-Protocol/src/contracts/interfaces/IPoolDataProvider.sol";
-import {IERC20Detailed} from "lib/K613-Protocol/src/contracts/dependencies/openzeppelin/contracts/IERC20Detailed.sol";
-import {MonadMainnet} from "../../src/networks/MonadMainnet.sol";
+import {IPool} from "lib/velkonix-contracts/src/contracts/interfaces/IPool.sol";
+import {IPoolDataProvider} from "lib/velkonix-contracts/src/contracts/interfaces/IPoolDataProvider.sol";
+import {
+    IERC20Detailed
+} from "lib/velkonix-contracts/src/contracts/dependencies/openzeppelin/contracts/IERC20Detailed.sol";
+import {MegaEthMainnet} from "../../src/networks/MegaEthMainnet.sol";
 
 /// @title ReserveStatus
-/// @notice Read-only dump of every listed reserve on Monad mainnet. No broadcast.
-/// @dev Run with `forge script script/monitoring/ReserveStatus.s.sol --rpc-url $MONAD_RPC_URL`.
+/// @notice Read-only dump of every listed reserve on MegaETH mainnet. No broadcast.
+/// @dev Run with `forge script script/monitoring/ReserveStatus.s.sol --rpc-url $MEGAETH_RPC_URL`.
 contract ReserveStatus is Script {
     uint256 internal constant RAY = 1e27;
 
     /// @notice Iterates `IPool.getReservesList` and prints per-reserve state.
     function run() external view {
-        IPool pool = IPool(MonadMainnet.POOL);
-        IPoolDataProvider dp = IPoolDataProvider(MonadMainnet.AAVE_PROTOCOL_DATA_PROVIDER);
+        IPool pool = IPool(MegaEthMainnet.POOL);
+        IPoolDataProvider dp = IPoolDataProvider(MegaEthMainnet.AAVE_PROTOCOL_DATA_PROVIDER);
 
         address[] memory reserves = pool.getReservesList();
-        console.log("=== Monad mainnet reserves ===");
+        console.log("=== MegaETH mainnet reserves ===");
         console.log("Reserves:", reserves.length);
         console.log("");
 

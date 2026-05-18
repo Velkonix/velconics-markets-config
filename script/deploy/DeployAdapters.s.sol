@@ -3,36 +3,49 @@ pragma solidity ^0.8.30;
 
 import {Script, console} from "forge-std/Script.sol";
 import {ExchangeRateAdapter} from "../../src/adapters/ExchangeRateAdapter.sol";
+import {StaticRewardPriceFeed} from "../../src/incentives/StaticRewardPriceFeed.sol";
 
+/// @title DeployAdapters
+/// @notice Deploys the price-feed adapters required by the MegaETH listing.
+/// @dev The Velkonix market AaveOracle is 8-decimal. USDe, USDm and wstETH only have
+///      18-decimal Chainlink feeds on MegaETH. `ExchangeRateAdapter` computes
+///      `(feedA × feedB) / 10^feedA.decimals` and reports `feedB.decimals()`. Passing the
+///      18-dec source as `feedA` and a constant `1.0 @ 8 decimals` feed as `feedB` yields
+///      `source / 1e10` reported at 8 decimals — i.e. a clean 18 → 8 re-scale, reusing the
+///      existing adapter. One shared unity feed is deployed and reused for all three.
+///      After broadcast, copy each printed adapter address into the matching
+///      `*_FEED_PENDING` constant in `K613MegaEth_InitialListing`.
 contract DeployAdapters is Script {
-    // address internal constant MON_USD = 0xBcD78f76005B7515837af6b50c7C52BCf73822fb;
-    // address internal constant SHMON_MON = 0x54a1020D118B9BeF3F3A4ec8E24AeEc9DFdBe4c3;
-    // address internal constant SMON_MON = 0x056d0eF95A4e046D028b00E6eC00bB4A8b1eBb96;
-    // address internal constant GMON_MON = 0xf97dfEd6Aa4cc387aBC5d47F0062A91CB4E4A755;
-    address internal constant WSRUSD_RUSD = 0x99bb13E956ba6e25624cAe95A41ED705AeA2557d;
-    address internal constant USDS_USD = 0xa16212CD5b330583B346167fA91E138d41AEe8CC;
+    // 18-decimal MegaETH Chainlink source feeds.
+    address internal constant USDM_USD_SRC = 0xdFe0063491d9DeD8F8abCdd7AE04238A1e70D270;
+    address internal constant USDE_USD_SRC = 0x4F2A91150D5D6B91B5F0b0DF6F109C4BCeCefA61;
+    address internal constant WSTETH_USD_SRC = 0xF2E02bfB172757471d091C6Fc66039020d29Eb26;
+
+    int256 internal constant UNITY_8DEC = 1e8; // 1.0 at 8 decimals
+    uint8 internal constant TARGET_DECIMALS = 8;
 
     function run() external {
         vm.startBroadcast();
 
-        console.log("Deploying ExchangeRateAdapter...\n");
+        // feedB: constant 1.0 at 8 decimals. Drives adapter output decimals to 8 without
+        // changing the value (out = src * 1e8 / 1e18 = src / 1e10).
+        StaticRewardPriceFeed unity = new StaticRewardPriceFeed(UNITY_8DEC, TARGET_DECIMALS, "ONE / USD (8d)");
+        console.log("Unity feed:        ", address(unity));
 
-        // ExchangeRateAdapter shmonAdapter = new ExchangeRateAdapter(SHMON_MON, MON_USD, "shMON / USD");
-        // console.log("shMON/USD adapter:", address(shmonAdapter));
-        // ExchangeRateAdapter smonAdapter = new ExchangeRateAdapter(SMON_MON, MON_USD, "sMON / USD");
-        // console.log("sMON/USD adapter:", address(smonAdapter));
-        // ExchangeRateAdapter gmonAdapter = new ExchangeRateAdapter(GMON_MON, MON_USD, "gMON / USD");
-        // console.log("gMON/USD adapter:", address(gmonAdapter));
+        ExchangeRateAdapter usdmAdapter = new ExchangeRateAdapter(USDM_USD_SRC, address(unity), "USDm / USD (8d)");
+        console.log("USDm/USD adapter:  ", address(usdmAdapter));
 
-        ExchangeRateAdapter wsrusdAdapter = new ExchangeRateAdapter(WSRUSD_RUSD, USDS_USD, "WSRUSD / USD");
-        console.log("WSRUSD/USD adapter:", address(wsrusdAdapter));
+        ExchangeRateAdapter usdeAdapter = new ExchangeRateAdapter(USDE_USD_SRC, address(unity), "USDe / USD (8d)");
+        console.log("USDe/USD adapter:  ", address(usdeAdapter));
+
+        ExchangeRateAdapter wstEthAdapter = new ExchangeRateAdapter(WSTETH_USD_SRC, address(unity), "wstETH / USD (8d)");
+        console.log("wstETH/USD adapter:", address(wstEthAdapter));
 
         vm.stopBroadcast();
 
-        console.log("\n=== Update payload priceFeed address ===");
-        // console.log("SHMON priceFeed:", address(shmonAdapter));
-        // console.log("SMON  priceFeed:", address(smonAdapter));
-        // console.log("GMON  priceFeed:", address(gmonAdapter));
-        console.log("WSRUSD priceFeed:", address(wsrusdAdapter));
+        console.log("\n=== Update K613MegaEth_InitialListing priceFeed placeholders ===");
+        console.log("USDM_FEED_PENDING   ->", address(usdmAdapter));
+        console.log("USDE_FEED_PENDING   ->", address(usdeAdapter));
+        console.log("WSTETH_FEED_PENDING ->", address(wstEthAdapter));
     }
 }

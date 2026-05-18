@@ -2,34 +2,36 @@
 pragma solidity ^0.8.30;
 
 import {Test} from "forge-std/Test.sol";
-import {K613Monad_InitialListing} from "../src/payloads/K613Monad_InitialListing.sol";
-import {K613PayloadMonad} from "../src/payloads/K613PayloadMonad.sol";
-import {IAaveV3ConfigEngine} from "lib/K613-Protocol/src/contracts/extensions/v3-config-engine/IAaveV3ConfigEngine.sol";
-import {EngineFlags} from "lib/K613-Protocol/src/contracts/extensions/v3-config-engine/EngineFlags.sol";
-import {MonadMainnet} from "../src/networks/MonadMainnet.sol";
+import {K613MegaEth_InitialListing} from "../src/payloads/K613MegaEth_InitialListing.sol";
+import {K613PayloadMegaEth} from "../src/payloads/K613PayloadMegaEth.sol";
+import {
+    IAaveV3ConfigEngine
+} from "lib/velkonix-contracts/src/contracts/extensions/v3-config-engine/IAaveV3ConfigEngine.sol";
+import {EngineFlags} from "lib/velkonix-contracts/src/contracts/extensions/v3-config-engine/EngineFlags.sol";
+import {MegaEthMainnet} from "../src/networks/MegaEthMainnet.sol";
 
-/// @title K613Monad_InitialListingTest
-/// @notice Verifies the declarative `Listing[]` produced by the initial Monad payload.
-contract K613Monad_InitialListingTest is Test {
-    K613Monad_InitialListing internal payload;
+/// @title K613MegaEth_InitialListingTest
+/// @notice Verifies the declarative `Listing[]` produced by the initial MegaETH payload.
+contract K613MegaEth_InitialListingTest is Test {
+    K613MegaEth_InitialListing internal payload;
 
     function setUp() public {
-        payload = new K613Monad_InitialListing();
+        payload = new K613MegaEth_InitialListing();
     }
 
-    function test_BindsMonadConfigEngine() public view {
-        assertEq(address(payload.CONFIG_ENGINE()), MonadMainnet.CONFIG_ENGINE, "engine mismatch");
+    function test_BindsMegaETHConfigEngine() public view {
+        assertEq(address(payload.CONFIG_ENGINE()), MegaEthMainnet.CONFIG_ENGINE, "engine mismatch");
     }
 
-    function test_PoolContextIsMonad() public view {
+    function test_PoolContextIsMegaETH() public view {
         IAaveV3ConfigEngine.PoolContext memory ctx = payload.getPoolContext();
-        assertEq(ctx.networkName, "Monad");
-        assertEq(ctx.networkAbbreviation, "Mon");
+        assertEq(ctx.networkName, "MegaETH");
+        assertEq(ctx.networkAbbreviation, "Mega");
     }
 
-    function test_ListsElevenAssets() public view {
+    function test_ListsSixAssets() public view {
         IAaveV3ConfigEngine.Listing[] memory listings = payload.newListings();
-        assertEq(listings.length, 11, "expected 11 reserves");
+        assertEq(listings.length, 6, "expected 6 reserves");
     }
 
     function test_EveryListingWellFormed() public view {

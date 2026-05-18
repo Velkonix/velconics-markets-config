@@ -2,6 +2,6 @@
 	path = lib/forge-std
 	url = https://github.com/foundry-rs/forge-std
 
-[submodule "lib/K613-Protocol"]
-	path = lib/K613-Protocol
-	url = https://github.com/K613-Official/K613-Protocol
+[submodule "lib/velkonix-contracts"]
+	path = lib/velkonix-contracts
+	url = https://github.com/Velkonix/velkonix-contracts

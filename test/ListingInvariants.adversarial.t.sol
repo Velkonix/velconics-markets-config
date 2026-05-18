@@ -2,21 +2,23 @@
 pragma solidity ^0.8.30;
 
 import {Test} from "forge-std/Test.sol";
-import {K613Monad_InitialListing} from "../src/payloads/K613Monad_InitialListing.sol";
-import {K613Monad_ConfigureEModes} from "../src/payloads/K613Monad_ConfigureEModes.sol";
-import {IAaveV3ConfigEngine} from "lib/K613-Protocol/src/contracts/extensions/v3-config-engine/IAaveV3ConfigEngine.sol";
-import {EngineFlags} from "lib/K613-Protocol/src/contracts/extensions/v3-config-engine/EngineFlags.sol";
+import {K613MegaEth_InitialListing} from "../src/payloads/K613MegaEth_InitialListing.sol";
+import {K613MegaEth_ConfigureEModes} from "../src/payloads/K613MegaEth_ConfigureEModes.sol";
+import {
+    IAaveV3ConfigEngine
+} from "lib/velkonix-contracts/src/contracts/extensions/v3-config-engine/IAaveV3ConfigEngine.sol";
+import {EngineFlags} from "lib/velkonix-contracts/src/contracts/extensions/v3-config-engine/EngineFlags.sol";
 
 /// @title ListingInvariantsAdversarialTest
 /// @notice Hard invariant checks on listing parameters that, if violated, would cause
 ///         liquidation insolvency, oracle misuse, or broken rate strategies on-chain.
 contract ListingInvariantsAdversarialTest is Test {
-    K613Monad_InitialListing internal listing;
-    K613Monad_ConfigureEModes internal emodes;
+    K613MegaEth_InitialListing internal listing;
+    K613MegaEth_ConfigureEModes internal emodes;
 
     function setUp() public {
-        listing = new K613Monad_InitialListing();
-        emodes = new K613Monad_ConfigureEModes();
+        listing = new K613MegaEth_InitialListing();
+        emodes = new K613MegaEth_ConfigureEModes();
     }
 
     // ───────── Liquidation solvency ─────────
@@ -86,8 +88,8 @@ contract ListingInvariantsAdversarialTest is Test {
     ///      expensive to borrow, defeating their purpose as the primary borrowing asset.
     function test_StablecoinOptimalUsageHigh() public view {
         IAaveV3ConfigEngine.Listing[] memory listings = listing.newListings();
-        // First 4 listings are stablecoins (USDC, AUSD, USDT0, WSRUSD)
-        for (uint256 i = 0; i < 4; i++) {
+        // First 3 listings are stablecoins (USDm, USDe, USDT0)
+        for (uint256 i = 0; i < 3; i++) {
             assertGe(
                 listings[i].rateStrategyParams.optimalUsageRatio,
                 80_00,
@@ -96,16 +98,16 @@ contract ListingInvariantsAdversarialTest is Test {
         }
     }
 
-    /// @dev Volatile asset optimal usage should be moderate (<= 80%).
-    ///      High optimal for volatiles means rates stay low even at high utilization — risky.
-    function test_VolatileOptimalUsageModerate() public view {
+    /// @dev Blue-chip asset optimal usage should be moderate (<= 80%).
+    ///      High optimal for blue-chips means rates stay low even at high utilization — risky.
+    function test_BlueChipOptimalUsageModerate() public view {
         IAaveV3ConfigEngine.Listing[] memory listings = listing.newListings();
-        // Listings 7-10 are volatile: WMON, SHMON, SMON, GMON
-        for (uint256 i = 7; i < listings.length; i++) {
+        // Listings 3-5 are blue-chip: BTC.b, wstETH, WETH
+        for (uint256 i = 3; i < listings.length; i++) {
             assertLe(
                 listings[i].rateStrategyParams.optimalUsageRatio,
                 80_00,
-                string.concat("volatile optimal > 80%: ", listings[i].assetSymbol)
+                string.concat("blue-chip optimal > 80%: ", listings[i].assetSymbol)
             );
         }
     }
@@ -139,7 +141,7 @@ contract ListingInvariantsAdversarialTest is Test {
     ///      isolation-mode collateral to borrow stables.
     function test_StablecoinsBorrowableInIsolation() public view {
         IAaveV3ConfigEngine.Listing[] memory listings = listing.newListings();
-        for (uint256 i = 0; i < 4; i++) {
+        for (uint256 i = 0; i < 3; i++) {
             assertEq(
                 listings[i].borrowableInIsolation,
                 EngineFlags.ENABLED,
@@ -151,7 +153,7 @@ contract ListingInvariantsAdversarialTest is Test {
     /// @dev Non-stables must NOT be borrowable in isolation — too volatile for isolation mode.
     function test_NonStablesNotBorrowableInIsolation() public view {
         IAaveV3ConfigEngine.Listing[] memory listings = listing.newListings();
-        for (uint256 i = 4; i < listings.length; i++) {
+        for (uint256 i = 3; i < listings.length; i++) {
             assertEq(
                 listings[i].borrowableInIsolation,
                 EngineFlags.DISABLED,

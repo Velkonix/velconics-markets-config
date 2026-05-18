@@ -13,7 +13,7 @@ contract SetIncentivesWeightsTest is Test {
     SetIncentivesWeights internal script;
     IncentivesConfig internal cfg;
 
-    uint256 internal constant EXPECTED_COUNT = 11;
+    uint256 internal constant EXPECTED_COUNT = 6;
     uint256 internal constant EXPECTED_SUPPLY_SUM = 6500;
     uint256 internal constant EXPECTED_BORROW_SUM = 3500;
 
@@ -24,7 +24,7 @@ contract SetIncentivesWeightsTest is Test {
 
     function test_CanonicalWeightsLength() public view {
         IncentivesConfig.AssetWeight[] memory ws = script.canonicalWeights();
-        assertEq(ws.length, EXPECTED_COUNT, "expected 11 asset rows");
+        assertEq(ws.length, EXPECTED_COUNT, "expected 6 asset rows");
     }
 
     function test_CanonicalWeightsSum() public view {
@@ -57,7 +57,7 @@ contract SetIncentivesWeightsTest is Test {
         IncentivesConfig.AssetWeight[] memory ws = script.canonicalWeights();
         cfg.setWeights(ws);
 
-        assertEq(cfg.weightCount(), EXPECTED_COUNT, "all 11 rows stored");
+        assertEq(cfg.weightCount(), EXPECTED_COUNT, "all 6 rows stored");
 
         IncentivesConfig.AssetWeight[] memory stored = cfg.getWeights();
         for (uint256 i = 0; i < stored.length; ++i) {
@@ -71,11 +71,11 @@ contract SetIncentivesWeightsTest is Test {
         IncentivesConfig.AssetWeight[] memory ws = script.canonicalWeights();
 
         // Anchor a few per-row expectations so a single-row swap fails loudly.
-        assertEq(ws[0].supplyBps, 1400, "USDC supply");
-        assertEq(ws[0].borrowBps, 700, "USDC borrow");
-        assertEq(ws[6].supplyBps, 650, "WBTC supply");
-        assertEq(ws[6].borrowBps, 500, "WBTC borrow");
-        assertEq(ws[10].supplyBps, 50, "GMON supply");
-        assertEq(ws[10].borrowBps, 50, "GMON borrow");
+        assertEq(ws[0].supplyBps, 1700, "USDm supply");
+        assertEq(ws[0].borrowBps, 900, "USDm borrow");
+        assertEq(ws[3].supplyBps, 1200, "BTC.b supply");
+        assertEq(ws[3].borrowBps, 600, "BTC.b borrow");
+        assertEq(ws[5].supplyBps, 800, "WETH supply");
+        assertEq(ws[5].borrowBps, 500, "WETH borrow");
     }
 }

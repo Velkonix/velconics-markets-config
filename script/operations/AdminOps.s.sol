@@ -2,8 +2,8 @@
 pragma solidity ^0.8.30;
 
 import {Script, console} from "forge-std/Script.sol";
-import {IPoolConfigurator} from "lib/K613-Protocol/src/contracts/interfaces/IPoolConfigurator.sol";
-import {MonadMainnet} from "../../src/networks/MonadMainnet.sol";
+import {IPoolConfigurator} from "lib/velkonix-contracts/src/contracts/interfaces/IPoolConfigurator.sol";
+import {MegaEthMainnet} from "../../src/networks/MegaEthMainnet.sol";
 
 contract AdminOps is Script {
     error UnknownOp(string op);
@@ -13,7 +13,7 @@ contract AdminOps is Script {
         address asset = vm.envAddress("ADMIN_ASSET");
         uint256 value = vm.envUint("ADMIN_VALUE");
 
-        IPoolConfigurator cfg = IPoolConfigurator(MonadMainnet.POOL_CONFIGURATOR);
+        IPoolConfigurator cfg = IPoolConfigurator(MegaEthMainnet.POOL_CONFIGURATOR);
 
         vm.startBroadcast();
 

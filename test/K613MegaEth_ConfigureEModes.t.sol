@@ -2,29 +2,30 @@
 pragma solidity ^0.8.30;
 
 import {Test} from "forge-std/Test.sol";
-import {K613Monad_ConfigureEModes} from "../src/payloads/K613Monad_ConfigureEModes.sol";
-import {IAaveV3ConfigEngine} from "lib/K613-Protocol/src/contracts/extensions/v3-config-engine/IAaveV3ConfigEngine.sol";
-import {EngineFlags} from "lib/K613-Protocol/src/contracts/extensions/v3-config-engine/EngineFlags.sol";
-import {MonadMainnet} from "../src/networks/MonadMainnet.sol";
+import {K613MegaEth_ConfigureEModes} from "../src/payloads/K613MegaEth_ConfigureEModes.sol";
+import {
+    IAaveV3ConfigEngine
+} from "lib/velkonix-contracts/src/contracts/extensions/v3-config-engine/IAaveV3ConfigEngine.sol";
+import {EngineFlags} from "lib/velkonix-contracts/src/contracts/extensions/v3-config-engine/EngineFlags.sol";
+import {MegaEthMainnet} from "../src/networks/MegaEthMainnet.sol";
 
-/// @title K613Monad_ConfigureEModesTest
+/// @title K613MegaEth_ConfigureEModesTest
 /// @notice Static checks on the eMode payload shape and engine wiring (no fork).
-contract K613Monad_ConfigureEModesTest is Test {
-    K613Monad_ConfigureEModes internal payload;
+contract K613MegaEth_ConfigureEModesTest is Test {
+    K613MegaEth_ConfigureEModes internal payload;
 
-    address internal constant USDC = 0x754704Bc059F8C67012fEd69BC8A327a5aafb603;
-    address internal constant AUSD = 0x00000000eFE302BEAA2b3e6e1b18d08D69a9012a;
-    address internal constant USDT0 = 0xe7cd86e13AC4309349F30B3435a9d337750fC82D;
-    address internal constant WSRUSD = 0x4809010926aec940b550D34a46A52739f996D75D;
-    address internal constant WETH = 0xEE8c0E9f1BFFb4Eb878d8f15f368A02a35481242;
-    address internal constant WSTETH = 0x10Aeaf63194db8d453d4D85a06E5eFE1dd0b5417;
+    address internal constant USDM = 0xFAfDdbb3FC7688494971a79cc65DCa3EF82079E7;
+    address internal constant USDE = 0x5d3a1Ff2b6BAb83b63cd9AD0787074081a52ef34;
+    address internal constant USDT0 = 0xB8CE59FC3717ada4C02eaDF9682A9e934F625ebb;
+    address internal constant WETH = 0x4200000000000000000000000000000000000006;
+    address internal constant WSTETH = 0x601aC63637933D88285A025C685AC4e9a92a98dA;
 
     function setUp() public {
-        payload = new K613Monad_ConfigureEModes();
+        payload = new K613MegaEth_ConfigureEModes();
     }
 
-    function test_BindsMonadConfigEngine() public view {
-        assertEq(address(payload.CONFIG_ENGINE()), MonadMainnet.CONFIG_ENGINE, "engine mismatch");
+    function test_BindsMegaETHConfigEngine() public view {
+        assertEq(address(payload.CONFIG_ENGINE()), MegaEthMainnet.CONFIG_ENGINE, "engine mismatch");
     }
 
     function test_CreatesTwoEModeCategories() public view {
@@ -54,9 +55,9 @@ contract K613Monad_ConfigureEModesTest is Test {
         }
     }
 
-    function test_AssignsSixAssets() public view {
+    function test_AssignsFiveAssets() public view {
         IAaveV3ConfigEngine.AssetEModeUpdate[] memory updates = payload.assetsEModeUpdates();
-        assertEq(updates.length, 6, "expected 6 asset assignments");
+        assertEq(updates.length, 5, "expected 5 asset assignments");
     }
 
     function test_EthAssetsInCategoryOne() public view {
@@ -71,10 +72,10 @@ contract K613Monad_ConfigureEModesTest is Test {
 
     function test_StableAssetsInCategoryTwo() public view {
         IAaveV3ConfigEngine.AssetEModeUpdate[] memory updates = payload.assetsEModeUpdates();
-        for (uint256 i = 2; i < 6; i++) {
+        for (uint256 i = 2; i < 5; i++) {
             assertEq(updates[i].eModeCategory, 2, "stable in wrong category");
             address a = updates[i].asset;
-            assertTrue(a == USDC || a == AUSD || a == USDT0 || a == WSRUSD, "unexpected stable asset");
+            assertTrue(a == USDM || a == USDE || a == USDT0, "unexpected stable asset");
         }
     }
 

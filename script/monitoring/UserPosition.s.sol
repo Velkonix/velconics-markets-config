@@ -2,21 +2,23 @@
 pragma solidity ^0.8.30;
 
 import {Script, console} from "forge-std/Script.sol";
-import {IPool} from "lib/K613-Protocol/src/contracts/interfaces/IPool.sol";
-import {IPoolDataProvider} from "lib/K613-Protocol/src/contracts/interfaces/IPoolDataProvider.sol";
-import {IERC20Detailed} from "lib/K613-Protocol/src/contracts/dependencies/openzeppelin/contracts/IERC20Detailed.sol";
-import {MonadMainnet} from "../../src/networks/MonadMainnet.sol";
+import {IPool} from "lib/velkonix-contracts/src/contracts/interfaces/IPool.sol";
+import {IPoolDataProvider} from "lib/velkonix-contracts/src/contracts/interfaces/IPoolDataProvider.sol";
+import {
+    IERC20Detailed
+} from "lib/velkonix-contracts/src/contracts/dependencies/openzeppelin/contracts/IERC20Detailed.sol";
+import {MegaEthMainnet} from "../../src/networks/MegaEthMainnet.sol";
 
 /// @title UserPosition
-/// @notice Read-only dump of a user's Aave position on Monad mainnet.
+/// @notice Read-only dump of a user's Aave position on MegaETH mainnet.
 /// @dev Env var:
 ///        USER — address of the account to inspect
 contract UserPosition is Script {
     function run() external view {
         address user = vm.envAddress("USER");
 
-        IPool pool = IPool(MonadMainnet.POOL);
-        IPoolDataProvider dp = IPoolDataProvider(MonadMainnet.AAVE_PROTOCOL_DATA_PROVIDER);
+        IPool pool = IPool(MegaEthMainnet.POOL);
+        IPoolDataProvider dp = IPoolDataProvider(MegaEthMainnet.AAVE_PROTOCOL_DATA_PROVIDER);
 
         console.log("=== User position ===");
         console.log("User:", user);

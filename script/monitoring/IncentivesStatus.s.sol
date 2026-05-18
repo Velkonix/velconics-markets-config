@@ -2,13 +2,15 @@
 pragma solidity ^0.8.30;
 
 import {Script, console} from "forge-std/Script.sol";
-import {IPool} from "lib/K613-Protocol/src/contracts/interfaces/IPool.sol";
-import {DataTypes} from "lib/K613-Protocol/src/contracts/protocol/libraries/types/DataTypes.sol";
-import {IRewardsDistributor} from "lib/K613-Protocol/src/contracts/rewards/interfaces/IRewardsDistributor.sol";
-import {IRewardsController} from "lib/K613-Protocol/src/contracts/rewards/interfaces/IRewardsController.sol";
-import {IERC20} from "lib/K613-Protocol/src/contracts/dependencies/openzeppelin/contracts/IERC20.sol";
-import {IERC20Detailed} from "lib/K613-Protocol/src/contracts/dependencies/openzeppelin/contracts/IERC20Detailed.sol";
-import {MonadMainnet} from "../../src/networks/MonadMainnet.sol";
+import {IPool} from "lib/velkonix-contracts/src/contracts/interfaces/IPool.sol";
+import {DataTypes} from "lib/velkonix-contracts/src/contracts/protocol/libraries/types/DataTypes.sol";
+import {IRewardsDistributor} from "lib/velkonix-contracts/src/contracts/rewards/interfaces/IRewardsDistributor.sol";
+import {IRewardsController} from "lib/velkonix-contracts/src/contracts/rewards/interfaces/IRewardsController.sol";
+import {IERC20} from "lib/velkonix-contracts/src/contracts/dependencies/openzeppelin/contracts/IERC20.sol";
+import {
+    IERC20Detailed
+} from "lib/velkonix-contracts/src/contracts/dependencies/openzeppelin/contracts/IERC20Detailed.sol";
+import {MegaEthMainnet} from "../../src/networks/MegaEthMainnet.sol";
 
 /// @title IncentivesStatus
 /// @notice Read-only snapshot of xK613 emissions per reserve, plus vault + allowance sanity checks.
@@ -20,9 +22,9 @@ contract IncentivesStatus is Script {
         address rewardToken = vm.envAddress("INCENTIVES_REWARD_TOKEN");
         address rewardsVault = vm.envAddress("INCENTIVES_REWARDS_VAULT");
 
-        IPool pool = IPool(MonadMainnet.POOL);
-        IRewardsDistributor dist = IRewardsDistributor(MonadMainnet.INCENTIVES_CONTROLLER);
-        IRewardsController ctrl = IRewardsController(MonadMainnet.INCENTIVES_CONTROLLER);
+        IPool pool = IPool(MegaEthMainnet.POOL);
+        IRewardsDistributor dist = IRewardsDistributor(MegaEthMainnet.INCENTIVES_CONTROLLER);
+        IRewardsController ctrl = IRewardsController(MegaEthMainnet.INCENTIVES_CONTROLLER);
 
         console.log("=== xK613 incentives status ===");
         console.log("Reward token:", rewardToken);

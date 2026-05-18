@@ -2,21 +2,23 @@
 pragma solidity ^0.8.30;
 
 import {Test} from "forge-std/Test.sol";
-import {K613Monad_InitialListing} from "../src/payloads/K613Monad_InitialListing.sol";
-import {K613Monad_ConfigureEModes} from "../src/payloads/K613Monad_ConfigureEModes.sol";
-import {IAaveV3ConfigEngine} from "lib/K613-Protocol/src/contracts/extensions/v3-config-engine/IAaveV3ConfigEngine.sol";
+import {K613MegaEth_InitialListing} from "../src/payloads/K613MegaEth_InitialListing.sol";
+import {K613MegaEth_ConfigureEModes} from "../src/payloads/K613MegaEth_ConfigureEModes.sol";
+import {
+    IAaveV3ConfigEngine
+} from "lib/velkonix-contracts/src/contracts/extensions/v3-config-engine/IAaveV3ConfigEngine.sol";
 
 /// @title PayloadIntegrationTest
 /// @notice Cross-payload consistency checks that both payloads must satisfy together.
 ///         Enforces the real-world ordering invariant: every asset the eMode payload
 ///         binds to a category must be listed by the initial listing payload.
 contract PayloadIntegrationTest is Test {
-    K613Monad_InitialListing internal listing;
-    K613Monad_ConfigureEModes internal emodes;
+    K613MegaEth_InitialListing internal listing;
+    K613MegaEth_ConfigureEModes internal emodes;
 
     function setUp() public {
-        listing = new K613Monad_InitialListing();
-        emodes = new K613Monad_ConfigureEModes();
+        listing = new K613MegaEth_InitialListing();
+        emodes = new K613MegaEth_ConfigureEModes();
     }
 
     /// @dev Invariant: every asset assigned to an eMode category must have been listed first.

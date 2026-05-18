@@ -2,22 +2,22 @@
 pragma solidity ^0.8.30;
 
 import {Script, console} from "forge-std/Script.sol";
-import {IERC20} from "lib/K613-Protocol/src/contracts/dependencies/openzeppelin/contracts/IERC20.sol";
-import {IPool} from "lib/K613-Protocol/src/contracts/interfaces/IPool.sol";
-import {DataTypes} from "lib/K613-Protocol/src/contracts/protocol/libraries/types/DataTypes.sol";
-import {IPoolAddressesProvider} from "lib/K613-Protocol/src/contracts/interfaces/IPoolAddressesProvider.sol";
-import {IEmissionManager} from "lib/K613-Protocol/src/contracts/rewards/interfaces/IEmissionManager.sol";
-import {ITransferStrategyBase} from "lib/K613-Protocol/src/contracts/rewards/interfaces/ITransferStrategyBase.sol";
+import {IERC20} from "lib/velkonix-contracts/src/contracts/dependencies/openzeppelin/contracts/IERC20.sol";
+import {IPool} from "lib/velkonix-contracts/src/contracts/interfaces/IPool.sol";
+import {DataTypes} from "lib/velkonix-contracts/src/contracts/protocol/libraries/types/DataTypes.sol";
+import {IPoolAddressesProvider} from "lib/velkonix-contracts/src/contracts/interfaces/IPoolAddressesProvider.sol";
+import {IEmissionManager} from "lib/velkonix-contracts/src/contracts/rewards/interfaces/IEmissionManager.sol";
+import {ITransferStrategyBase} from "lib/velkonix-contracts/src/contracts/rewards/interfaces/ITransferStrategyBase.sol";
 import {
     PullRewardsTransferStrategy
-} from "lib/K613-Protocol/src/contracts/rewards/transfer-strategies/PullRewardsTransferStrategy.sol";
-import {RewardsDataTypes} from "lib/K613-Protocol/src/contracts/rewards/libraries/RewardsDataTypes.sol";
-import {AggregatorInterface} from "lib/K613-Protocol/src/contracts/dependencies/chainlink/AggregatorInterface.sol";
-import {IRewardsDistributor} from "lib/K613-Protocol/src/contracts/rewards/interfaces/IRewardsDistributor.sol";
+} from "lib/velkonix-contracts/src/contracts/rewards/transfer-strategies/PullRewardsTransferStrategy.sol";
+import {RewardsDataTypes} from "lib/velkonix-contracts/src/contracts/rewards/libraries/RewardsDataTypes.sol";
+import {AggregatorInterface} from "lib/velkonix-contracts/src/contracts/dependencies/chainlink/AggregatorInterface.sol";
+import {IRewardsDistributor} from "lib/velkonix-contracts/src/contracts/rewards/interfaces/IRewardsDistributor.sol";
 import {StaticRewardPriceFeed} from "../../src/incentives/StaticRewardPriceFeed.sol";
 import {IncentivesConfig} from "../../src/incentives/IncentivesConfig.sol";
 import {NetworkConfig} from "../../src/networks/NetworkConfig.sol";
-import {MonadMainnet} from "../../src/networks/MonadMainnet.sol";
+import {MegaEthMainnet} from "../../src/networks/MegaEthMainnet.sol";
 
 interface IOwnable {
     function owner() external view returns (address);
@@ -66,7 +66,7 @@ contract ConfigureSupplyIncentives is Script {
         if (oracleAnswer <= 0) revert InvalidOracleAnswer();
         uint8 oracleDecimals = uint8(vm.envOr("INCENTIVES_REWARD_ORACLE_DECIMALS", uint256(8)));
 
-        NetworkConfig.Addresses memory addrs = MonadMainnet.getAddresses();
+        NetworkConfig.Addresses memory addrs = MegaEthMainnet.getAddresses();
         if (addrs.incentivesController == address(0)) revert ZeroIncentivesController();
 
         address poolAddr = addrs.pool;
@@ -88,7 +88,7 @@ contract ConfigureSupplyIncentives is Script {
         }
         if (emissionManager.getEmissionAdmin(rewardToken) != deployer) revert NotEmissionAdmin();
 
-        StaticRewardPriceFeed priceFeed = new StaticRewardPriceFeed(oracleAnswer, oracleDecimals, "xK613 / USD");
+        StaticRewardPriceFeed priceFeed = new StaticRewardPriceFeed(oracleAnswer, oracleDecimals, "Reward / USD");
         PullRewardsTransferStrategy strategy =
             new PullRewardsTransferStrategy(addrs.incentivesController, deployer, rewardsVault);
 
@@ -140,7 +140,7 @@ contract ConfigureSupplyIncentives is Script {
         emissionManager.configureAssets(cfg);
 
         console.log("\n=== Deployment Summary ===");
-        console.log("Reward token (xK613):", rewardToken);
+        console.log("Reward token:", rewardToken);
         console.log("Rewards vault:", rewardsVault);
         console.log("PriceFeed:", address(priceFeed));
         console.log("TransferStrategy:", address(strategy));
@@ -150,7 +150,7 @@ contract ConfigureSupplyIncentives is Script {
         uint256 allowance = IERC20(rewardToken).allowance(rewardsVault, address(strategy));
         if (allowance < type(uint256).max / 2) {
             console.log("\nACTION REQUIRED: from REWARDS_VAULT call:");
-            console.log("  IERC20(xK613).approve(strategy, type(uint256).max)");
+            console.log("  IERC20(rewardToken).approve(strategy, type(uint256).max)");
         }
 
         vm.stopBroadcast();

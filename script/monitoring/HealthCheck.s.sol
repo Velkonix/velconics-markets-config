@@ -2,9 +2,9 @@
 pragma solidity ^0.8.30;
 
 import {Script, console} from "forge-std/Script.sol";
-import {IACLManager} from "lib/K613-Protocol/src/contracts/interfaces/IACLManager.sol";
-import {IEmissionManager} from "lib/K613-Protocol/src/contracts/rewards/interfaces/IEmissionManager.sol";
-import {MonadMainnet} from "../../src/networks/MonadMainnet.sol";
+import {IACLManager} from "lib/velkonix-contracts/src/contracts/interfaces/IACLManager.sol";
+import {IEmissionManager} from "lib/velkonix-contracts/src/contracts/rewards/interfaces/IEmissionManager.sol";
+import {MegaEthMainnet} from "../../src/networks/MegaEthMainnet.sol";
 
 interface IOwnable {
     function owner() external view returns (address);
@@ -22,14 +22,14 @@ interface IAccessControlRead {
 ///        CHECK_REWARD   — optional reward token address to look up emission admin
 contract HealthCheck is Script {
     function run() external view {
-        IACLManager acl = IACLManager(MonadMainnet.ACL_MANAGER);
-        IAccessControlRead ac = IAccessControlRead(MonadMainnet.ACL_MANAGER);
+        IACLManager acl = IACLManager(MegaEthMainnet.ACL_MANAGER);
+        IAccessControlRead ac = IAccessControlRead(MegaEthMainnet.ACL_MANAGER);
 
-        console.log("=== Monad mainnet ACL / ownership audit ===");
+        console.log("=== MegaETH mainnet ACL / ownership audit ===");
         console.log("");
 
-        console.log("PoolAddressesProvider owner:", IOwnable(MonadMainnet.POOL_ADDRESSES_PROVIDER).owner());
-        console.log("EmissionManager         owner:", IOwnable(MonadMainnet.EMISSION_MANAGER).owner());
+        console.log("PoolAddressesProvider owner:", IOwnable(MegaEthMainnet.POOL_ADDRESSES_PROVIDER).owner());
+        console.log("EmissionManager         owner:", IOwnable(MegaEthMainnet.EMISSION_MANAGER).owner());
         console.log("");
 
         address deployer = vm.envOr("CHECK_DEPLOYER", address(0));
@@ -46,7 +46,7 @@ contract HealthCheck is Script {
 
         address reward = vm.envOr("CHECK_REWARD", address(0));
         if (reward != address(0)) {
-            IEmissionManager em = IEmissionManager(MonadMainnet.EMISSION_MANAGER);
+            IEmissionManager em = IEmissionManager(MegaEthMainnet.EMISSION_MANAGER);
             console.log("Reward token:", reward);
             console.log("  emissionAdmin:", em.getEmissionAdmin(reward));
             console.log("");

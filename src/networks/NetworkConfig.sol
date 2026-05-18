@@ -1,11 +1,11 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.30;
 
-import {IPoolAddressesProvider} from "lib/K613-Protocol/src/contracts/interfaces/IPoolAddressesProvider.sol";
+import {IPoolAddressesProvider} from "lib/velkonix-contracts/src/contracts/interfaces/IPoolAddressesProvider.sol";
 
 /// @title NetworkConfig
 /// @notice Shared helpers and the canonical address bundle for a deployment.
-/// @dev Per-chain constants live in `MonadMainnet`.
+/// @dev Per-chain constants live in `MegaEthMainnet`.
 library NetworkConfig {
     /// @notice Core protocol addresses required by listing and maintenance scripts.
     struct Addresses {
