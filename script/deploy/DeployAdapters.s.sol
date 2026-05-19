@@ -14,7 +14,7 @@ import {StaticRewardPriceFeed} from "../../src/incentives/StaticRewardPriceFeed.
 ///      `source / 1e10` reported at 8 decimals — i.e. a clean 18 → 8 re-scale, reusing the
 ///      existing adapter. One shared unity feed is deployed and reused for all three.
 ///      After broadcast, copy each printed adapter address into the matching
-///      `*_FEED_PENDING` constant in `K613MegaEth_InitialListing`.
+///      `*_FEED_PENDING` constant in `VelkonixMegaEth_InitialListing`.
 contract DeployAdapters is Script {
     // 18-decimal MegaETH Chainlink source feeds.
     address internal constant USDM_USD_SRC = 0xdFe0063491d9DeD8F8abCdd7AE04238A1e70D270;
@@ -43,7 +43,7 @@ contract DeployAdapters is Script {
 
         vm.stopBroadcast();
 
-        console.log("\n=== Update K613MegaEth_InitialListing priceFeed placeholders ===");
+        console.log("\n=== Update VelkonixMegaEth_InitialListing priceFeed placeholders ===");
         console.log("USDM_FEED_PENDING   ->", address(usdmAdapter));
         console.log("USDE_FEED_PENDING   ->", address(usdeAdapter));
         console.log("WSTETH_FEED_PENDING ->", address(wstEthAdapter));

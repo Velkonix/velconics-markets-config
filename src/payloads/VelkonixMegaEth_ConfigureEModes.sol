@@ -1,13 +1,13 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.30;
 
-import {K613PayloadMegaEth} from "./K613PayloadMegaEth.sol";
+import {VelkonixPayloadMegaEth} from "./VelkonixPayloadMegaEth.sol";
 import {
     IAaveV3ConfigEngine
 } from "lib/velkonix-contracts/src/contracts/extensions/v3-config-engine/IAaveV3ConfigEngine.sol";
 import {EngineFlags} from "lib/velkonix-contracts/src/contracts/extensions/v3-config-engine/EngineFlags.sol";
 
-/// @title K613MegaEth_ConfigureEModes
+/// @title VelkonixMegaEth_ConfigureEModes
 /// @notice Introduces ETH-correlated and Stablecoin eMode categories and assigns listed
 ///         blue-chip reserves to them. Users opting into a category enjoy higher ltv/lt
 ///         when both collateral and borrow stay inside the category.
@@ -15,7 +15,7 @@ import {EngineFlags} from "lib/velkonix-contracts/src/contracts/extensions/v3-co
 ///        1 — ETH-correlated (WETH, wstETH)
 ///        2 — Stablecoins (USDm, USDe, USDT0)
 ///      BTC.b is intentionally left out of every eMode category.
-contract K613MegaEth_ConfigureEModes is K613PayloadMegaEth {
+contract VelkonixMegaEth_ConfigureEModes is VelkonixPayloadMegaEth {
     uint8 internal constant EMODE_ETH = 1;
     uint8 internal constant EMODE_STABLE = 2;
 

@@ -1,10 +1,6 @@
-# K613 Markets Config — MegaETH Mainnet
+# Velkonix Markets Config — MegaETH Mainnet
 
-Configuration for the **K613 lending market** — an Aave v3–compatible money market deployed on top of [K613-Protocol](lib/velkonix-contracts/). This repo does not deploy the core protocol. It declares **which assets are listed**, **what price feeds are used**, **how collateral and interest behave**, and **how reward incentives are distributed** — all as one-shot payloads that `delegatecall` the deployed `AaveV3ConfigEngine`.
-
-<p align="center">
-  <img src="image/image.png" alt="Overview" />
-</p>
+Configuration for the **Velkonix lending market** — an Aave v3–compatible money market deployed on top of [velkonix-contracts](lib/velkonix-contracts/). This repo does not deploy the core protocol. It declares **which assets are listed**, **what price feeds are used**, **how collateral and interest behave**, and **how reward incentives are distributed** — all as one-shot payloads that `delegatecall` the deployed `AaveV3ConfigEngine`.
 
 For operational runbooks (deploy / freeze / role rotation), see [DEPLOYMENT.md](DEPLOYMENT.md).
 
@@ -18,13 +14,28 @@ For operational runbooks (deploy / freeze / role rotation), see [DEPLOYMENT.md](
 
 Oracle decimals `8`, price-feed staleness `3600s`, wrapped native = `WETH` predeploy `0x4200…0006` (native token is ETH — no chain-native LSTs). Canonical protocol addresses (Pool, PoolConfigurator, Oracle, ACLManager, `AaveV3ConfigEngine`, EmissionManager, …) live in [`src/networks/MegaEthMainnet.sol`](src/networks/MegaEthMainnet.sol), parsed from the core deployment broadcast.
 
-> ⚠️ **Price feeds pending.** Only `WETH` has a resolved feed (the network ETH/USD aggregator). `USDm`, `USDe`, `USDT0`, `BTC.b`, `wstETH` carry `*_FEED_PENDING` placeholders in [`K613MegaEth_InitialListing`](src/payloads/K613MegaEth_InitialListing.sol) and **must** be replaced with real aggregators before broadcast. `wstETH` is priced via an `ExchangeRateAdapter` (wstETH/ETH × ETH/USD). `K613MegaEth_InitialListing.hasPendingPriceFeeds()` returns `true` while placeholders remain.
+### Price feeds
+
+All feeds are MegaETH **Chainlink** aggregators (verified on-chain, chain 4326). The market AaveOracle is **8-decimal**, and Aave reads `latestAnswer()` as-is without normalizing feed decimals — so every feed wired into a listing must report 8 decimals.
+
+| Asset | Chainlink feed | Address | Feed dec | Wiring |
+|-------|----------------|---------|---------:|--------|
+| WETH   | ETH / USD  | `0xcA4e254D95637DE95E2a2F79244b03380d697feD` | 8  | direct |
+| BTC.b  | BTC / USD  | `0xc6E3007B597f6F5a6330d43053D1EF73cCbbE721` | 8  | direct |
+| USDT0  | USDT / USD | `0xA533f4164d8d9F8C3995FC83F2f022a622d1765D` | 8  | direct |
+| USDm   | USDM / USD | `0xdFe0063491d9DeD8F8abCdd7AE04238A1e70D270` | 18 | via adapter |
+| USDe   | USDE / USD | `0x4F2A91150D5D6B91B5F0b0DF6F109C4BCeCefA61` | 18 | via adapter |
+| wstETH | wstETH/USD Calculated | `0xF2E02bfB172757471d091C6Fc66039020d29Eb26` | 18 | via adapter |
+
+The three 8-decimal feeds are wired directly. `USDm`, `USDe`, `wstETH` only have 18-decimal Chainlink feeds on MegaETH (no 8-decimal variant exists), so each is wrapped in an [`ExchangeRateAdapter`](src/adapters/ExchangeRateAdapter.sol) that re-scales 18 → 8 decimals (`ExchangeRateAdapter(src18d, unity8d)`, where `unity8d` is a constant `1.0 @ 8 dec` [`StaticRewardPriceFeed`](src/incentives/StaticRewardPriceFeed.sol); output = `src / 1e10` at 8 dec). One shared unity feed plus three adapters are deployed by [`DeployAdapters.s.sol`](script/deploy/DeployAdapters.s.sol).
+
+> ⚠️ **Before broadcast:** deploy the adapters and paste their addresses into the `USDM_FEED_PENDING` / `USDE_FEED_PENDING` / `WSTETH_FEED_PENDING` placeholders in [`VelkonixMegaEth_InitialListing`](src/payloads/VelkonixMegaEth_InitialListing.sol). `VelkonixMegaEth_InitialListing.hasPendingPriceFeeds()` returns `true` while any placeholder remains.
 
 ---
 
 ## Listed reserves (6 assets)
 
-Initial listing is declared in a single payload, [`K613MegaEth_InitialListing`](src/payloads/K613MegaEth_InitialListing.sol). Every reserve is borrow-enabled, flashloanable, and uses the same liquidation protocol fee (10%). Debt ceiling is zero (no isolation mode on any listing).
+Initial listing is declared in a single payload, [`VelkonixMegaEth_InitialListing`](src/payloads/VelkonixMegaEth_InitialListing.sol). Every reserve is borrow-enabled, flashloanable, and uses the same liquidation protocol fee (10%). Debt ceiling is zero (no isolation mode on any listing).
 
 ### Stablecoins
 
@@ -44,7 +55,7 @@ All three are `borrowableInIsolation = true`. Caps are in whole units of the und
 | wstETH | 75% | 79% | 6%  | 25% |      2,500 |      3,000 | Blue-chip  |
 | WETH   | 78% | 81% | 6%  | 25% |      3,500 |      4,000 | Blue-chip  |
 
-wstETH runs at tighter LTV/LT than WETH to price in LST/ETH basis risk. wstETH has no direct USD Chainlink-style feed — it is priced via [`ExchangeRateAdapter`](src/adapters/ExchangeRateAdapter.sol), which composes `wstETH/ETH × ETH/USD` on the fly and returns `min(updatedAt)` of both sources. The adapter is deployed once by [`DeployAdapters.s.sol`](script/deploy/DeployAdapters.s.sol) and referenced by the listing payload.
+wstETH runs at tighter LTV/LT than WETH to price in LST/ETH basis risk. wstETH uses the Chainlink `wstETH/USD Calculated` feed, which is 18-decimal — it is wrapped in an [`ExchangeRateAdapter`](src/adapters/ExchangeRateAdapter.sol) to re-scale to the 8-decimal precision the AaveOracle expects (see [Price feeds](#price-feeds) above).
 
 ### Risk-parameter legend
 
@@ -89,7 +100,7 @@ Below the optimal utilization the borrow APR rises linearly along `slope₁`; pa
 
 ## eMode categories
 
-Declared in [`K613MegaEth_ConfigureEModes`](src/payloads/K613MegaEth_ConfigureEModes.sol). When a user opts into a category, their positions within the category use the **category's** LTV/LT/LB — which are substantially looser than the per-asset defaults — and become capital-efficient for the target trade (leveraged ETH, stablecoin looping). Positions outside the category are rejected while opted in.
+Declared in [`VelkonixMegaEth_ConfigureEModes`](src/payloads/VelkonixMegaEth_ConfigureEModes.sol). When a user opts into a category, their positions within the category use the **category's** LTV/LT/LB — which are substantially looser than the per-asset defaults — and become capital-efficient for the target trade (leveraged ETH, stablecoin looping). Positions outside the category are rejected while opted in.
 
 | ID | Category       | LTV | LT  | LB  | Members             |
 |----|----------------|-----|-----|-----|---------------------|
@@ -102,7 +113,7 @@ Both categories enable the asset as both collateral and borrowable within the ca
 
 ## Reward incentives — economics
 
-Supply and borrow emissions are distributed through Aave's `RewardsController` / `EmissionManager`. Per-second emission rates are derived from on-chain weights stored in [`IncentivesConfig`](src/incentives/IncentivesConfig.sol). The reward token is the protocol's own token (an xK613-style governance/reward token); its address is supplied at runtime via `INCENTIVES_REWARD_TOKEN`.
+Supply and borrow emissions are distributed through Aave's `RewardsController` / `EmissionManager`. Per-second emission rates are derived from on-chain weights stored in [`IncentivesConfig`](src/incentives/IncentivesConfig.sol). The reward token is the protocol's own Velkonix governance/reward token; its address is supplied at runtime via `INCENTIVES_REWARD_TOKEN`.
 
 ### Yearly budget
 
@@ -160,17 +171,17 @@ src/
 │   ├── NetworkConfig.sol               # Shared Addresses struct + resolvers
 │   └── MegaEthMainnet.sol              # Canonical deployed addresses for chain 4326
 ├── adapters/
-│   └── ExchangeRateAdapter.sol         # asset/base × base/USD → USD aggregator
+│   └── ExchangeRateAdapter.sol         # (feedA × feedB)/10^decA → used to re-scale 18→8 dec feeds
 ├── incentives/
 │   ├── IncentivesConfig.sol            # On-chain (supplyBps, borrowBps) weights, yearly budgets
 │   └── StaticRewardPriceFeed.sol       # Fixed-price aggregator for reward token (APR display)
 └── payloads/
-    ├── K613PayloadMegaEth.sol          # Abstract base wired to MegaEthMainnet.CONFIG_ENGINE
-    ├── K613MegaEth_InitialListing.sol  # One-shot payload listing the 6 reserves
-    └── K613MegaEth_ConfigureEModes.sol # Blue-chip / stablecoin eMode categories
+    ├── VelkonixPayloadMegaEth.sol          # Abstract base wired to MegaEthMainnet.CONFIG_ENGINE
+    ├── VelkonixMegaEth_InitialListing.sol  # One-shot payload listing the 6 reserves
+    └── VelkonixMegaEth_ConfigureEModes.sol # Blue-chip / stablecoin eMode categories
 
 script/
-├── deploy/            DeployAdapters.s.sol                 # wstETH/USD ExchangeRateAdapter
+├── deploy/            DeployAdapters.s.sol                 # unity feed + 3 ExchangeRateAdapters (USDm/USDe/wstETH 18→8)
 ├── operations/        ExecutePayload.s.sol                 # Temp-grants POOL_ADMIN, execute()s, revokes
 │                      AdminOps.s.sol                       # One-call PoolConfigurator tweaks
 │                      ExecuteEmergencyPayload.s.sol        # setReserveFreeze / setReservePause
@@ -194,15 +205,14 @@ Full runbook with simulate / broadcast / verify commands per step: **[DEPLOYMENT
 
 High-level order:
 
-1. Resolve real price feeds for `USDm`, `USDe`, `USDT0`, `BTC.b`, and the `wstETH/ETH` rate feed.
-2. Deploy `ExchangeRateAdapter` for `wstETH` via `DeployAdapters.s.sol`; copy its address into the listing payload.
-3. Fill the remaining `*_FEED_PENDING` placeholders in `K613MegaEth_InitialListing` (`hasPendingPriceFeeds()` must return `false`).
-4. Execute `K613MegaEth_InitialListing` payload.
-5. Execute `K613MegaEth_ConfigureEModes` payload.
-6. Deploy `IncentivesConfig`, run `SetIncentivesWeights` (65/35 split).
-7. Run `ConfigureSupplyIncentives` (registers emissions on every aToken + variableDebtToken).
-8. Grant roles to multisigs, revoke deployer.
-9. Rotate `DEFAULT_ADMIN_ROLE` to the main multisig.
+1. Run `DeployAdapters.s.sol` — deploys the shared unity feed + 3 `ExchangeRateAdapter`s (USDm/USDe/wstETH, 18→8). Direct 8-dec feeds (WETH/BTC.b/USDT0) are already wired in code.
+2. Paste the 3 printed adapter addresses into `USDM_FEED_PENDING` / `USDE_FEED_PENDING` / `WSTETH_FEED_PENDING` in `VelkonixMegaEth_InitialListing`; confirm `hasPendingPriceFeeds()` returns `false`.
+3. Execute `VelkonixMegaEth_InitialListing` payload.
+4. Execute `VelkonixMegaEth_ConfigureEModes` payload.
+5. Deploy `IncentivesConfig`, run `SetIncentivesWeights` (65/35 split).
+6. Run `ConfigureSupplyIncentives` (registers emissions on every aToken + variableDebtToken).
+7. Grant roles to multisigs, revoke deployer.
+8. Rotate `DEFAULT_ADMIN_ROLE` to the main multisig.
 
 ---
 

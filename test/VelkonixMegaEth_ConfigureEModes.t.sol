@@ -2,17 +2,17 @@
 pragma solidity ^0.8.30;
 
 import {Test} from "forge-std/Test.sol";
-import {K613MegaEth_ConfigureEModes} from "../src/payloads/K613MegaEth_ConfigureEModes.sol";
+import {VelkonixMegaEth_ConfigureEModes} from "../src/payloads/VelkonixMegaEth_ConfigureEModes.sol";
 import {
     IAaveV3ConfigEngine
 } from "lib/velkonix-contracts/src/contracts/extensions/v3-config-engine/IAaveV3ConfigEngine.sol";
 import {EngineFlags} from "lib/velkonix-contracts/src/contracts/extensions/v3-config-engine/EngineFlags.sol";
 import {MegaEthMainnet} from "../src/networks/MegaEthMainnet.sol";
 
-/// @title K613MegaEth_ConfigureEModesTest
+/// @title VelkonixMegaEth_ConfigureEModesTest
 /// @notice Static checks on the eMode payload shape and engine wiring (no fork).
-contract K613MegaEth_ConfigureEModesTest is Test {
-    K613MegaEth_ConfigureEModes internal payload;
+contract VelkonixMegaEth_ConfigureEModesTest is Test {
+    VelkonixMegaEth_ConfigureEModes internal payload;
 
     address internal constant USDM = 0xFAfDdbb3FC7688494971a79cc65DCa3EF82079E7;
     address internal constant USDE = 0x5d3a1Ff2b6BAb83b63cd9AD0787074081a52ef34;
@@ -21,7 +21,7 @@ contract K613MegaEth_ConfigureEModesTest is Test {
     address internal constant WSTETH = 0x601aC63637933D88285A025C685AC4e9a92a98dA;
 
     function setUp() public {
-        payload = new K613MegaEth_ConfigureEModes();
+        payload = new VelkonixMegaEth_ConfigureEModes();
     }
 
     function test_BindsMegaETHConfigEngine() public view {

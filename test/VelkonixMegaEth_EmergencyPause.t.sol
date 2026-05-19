@@ -5,9 +5,9 @@ import {Test} from "forge-std/Test.sol";
 import {IPoolConfigurator} from "lib/velkonix-contracts/src/contracts/interfaces/IPoolConfigurator.sol";
 import {MegaEthMainnet} from "../src/networks/MegaEthMainnet.sol";
 
-/// @title K613MegaEth_EmergencyPauseTest
+/// @title VelkonixMegaEth_EmergencyPauseTest
 /// @notice Verifies direct `PoolConfigurator.setReservePause` calls as the broadcaster would.
-contract K613MegaEth_EmergencyPauseTest is Test {
+contract VelkonixMegaEth_EmergencyPauseTest is Test {
     address internal constant ASSET = address(0xBEEF);
 
     bytes4 internal constant SET_RESERVE_PAUSE_2ARG = bytes4(keccak256("setReservePause(address,bool)"));

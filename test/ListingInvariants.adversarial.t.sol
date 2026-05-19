@@ -2,8 +2,8 @@
 pragma solidity ^0.8.30;
 
 import {Test} from "forge-std/Test.sol";
-import {K613MegaEth_InitialListing} from "../src/payloads/K613MegaEth_InitialListing.sol";
-import {K613MegaEth_ConfigureEModes} from "../src/payloads/K613MegaEth_ConfigureEModes.sol";
+import {VelkonixMegaEth_InitialListing} from "../src/payloads/VelkonixMegaEth_InitialListing.sol";
+import {VelkonixMegaEth_ConfigureEModes} from "../src/payloads/VelkonixMegaEth_ConfigureEModes.sol";
 import {
     IAaveV3ConfigEngine
 } from "lib/velkonix-contracts/src/contracts/extensions/v3-config-engine/IAaveV3ConfigEngine.sol";
@@ -13,12 +13,12 @@ import {EngineFlags} from "lib/velkonix-contracts/src/contracts/extensions/v3-co
 /// @notice Hard invariant checks on listing parameters that, if violated, would cause
 ///         liquidation insolvency, oracle misuse, or broken rate strategies on-chain.
 contract ListingInvariantsAdversarialTest is Test {
-    K613MegaEth_InitialListing internal listing;
-    K613MegaEth_ConfigureEModes internal emodes;
+    VelkonixMegaEth_InitialListing internal listing;
+    VelkonixMegaEth_ConfigureEModes internal emodes;
 
     function setUp() public {
-        listing = new K613MegaEth_InitialListing();
-        emodes = new K613MegaEth_ConfigureEModes();
+        listing = new VelkonixMegaEth_InitialListing();
+        emodes = new VelkonixMegaEth_ConfigureEModes();
     }
 
     // ───────── Liquidation solvency ─────────

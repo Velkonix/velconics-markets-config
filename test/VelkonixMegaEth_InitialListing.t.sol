@@ -2,21 +2,20 @@
 pragma solidity ^0.8.30;
 
 import {Test} from "forge-std/Test.sol";
-import {K613MegaEth_InitialListing} from "../src/payloads/K613MegaEth_InitialListing.sol";
-import {K613PayloadMegaEth} from "../src/payloads/K613PayloadMegaEth.sol";
+import {VelkonixMegaEth_InitialListing} from "../src/payloads/VelkonixMegaEth_InitialListing.sol";
 import {
     IAaveV3ConfigEngine
 } from "lib/velkonix-contracts/src/contracts/extensions/v3-config-engine/IAaveV3ConfigEngine.sol";
 import {EngineFlags} from "lib/velkonix-contracts/src/contracts/extensions/v3-config-engine/EngineFlags.sol";
 import {MegaEthMainnet} from "../src/networks/MegaEthMainnet.sol";
 
-/// @title K613MegaEth_InitialListingTest
+/// @title VelkonixMegaEth_InitialListingTest
 /// @notice Verifies the declarative `Listing[]` produced by the initial MegaETH payload.
-contract K613MegaEth_InitialListingTest is Test {
-    K613MegaEth_InitialListing internal payload;
+contract VelkonixMegaEth_InitialListingTest is Test {
+    VelkonixMegaEth_InitialListing internal payload;
 
     function setUp() public {
-        payload = new K613MegaEth_InitialListing();
+        payload = new VelkonixMegaEth_InitialListing();
     }
 
     function test_BindsMegaETHConfigEngine() public view {

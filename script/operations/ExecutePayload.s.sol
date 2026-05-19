@@ -3,9 +3,9 @@ pragma solidity ^0.8.30;
 
 import {Script, console} from "forge-std/Script.sol";
 import {IACLManager} from "lib/velkonix-contracts/src/contracts/interfaces/IACLManager.sol";
-import {K613PayloadMegaEth} from "../../src/payloads/K613PayloadMegaEth.sol";
-import {K613MegaEth_InitialListing} from "../../src/payloads/K613MegaEth_InitialListing.sol";
-import {K613MegaEth_ConfigureEModes} from "../../src/payloads/K613MegaEth_ConfigureEModes.sol";
+import {VelkonixPayloadMegaEth} from "../../src/payloads/VelkonixPayloadMegaEth.sol";
+import {VelkonixMegaEth_InitialListing} from "../../src/payloads/VelkonixMegaEth_InitialListing.sol";
+import {VelkonixMegaEth_ConfigureEModes} from "../../src/payloads/VelkonixMegaEth_ConfigureEModes.sol";
 import {MegaEthMainnet} from "../../src/networks/MegaEthMainnet.sol";
 
 /// @title ExecutePayload
@@ -22,12 +22,12 @@ contract ExecutePayload is Script {
 
         vm.startBroadcast();
 
-        K613PayloadMegaEth payload;
+        VelkonixPayloadMegaEth payload;
         bytes32 h = keccak256(bytes(name));
         if (h == keccak256("InitialListing")) {
-            payload = new K613MegaEth_InitialListing();
+            payload = new VelkonixMegaEth_InitialListing();
         } else if (h == keccak256("ConfigureEModes")) {
-            payload = new K613MegaEth_ConfigureEModes();
+            payload = new VelkonixMegaEth_ConfigureEModes();
         } else {
             revert UnknownPayload(name);
         }

@@ -1,13 +1,13 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.30;
 
-import {K613PayloadMegaEth} from "./K613PayloadMegaEth.sol";
+import {VelkonixPayloadMegaEth} from "./VelkonixPayloadMegaEth.sol";
 import {
     IAaveV3ConfigEngine
 } from "lib/velkonix-contracts/src/contracts/extensions/v3-config-engine/IAaveV3ConfigEngine.sol";
 import {EngineFlags} from "lib/velkonix-contracts/src/contracts/extensions/v3-config-engine/EngineFlags.sol";
 
-/// @title K613MegaEth_InitialListing
+/// @title VelkonixMegaEth_InitialListing
 /// @notice One-shot payload that lists the 6 canonical MegaETH mainnet reserves via the config engine.
 /// @dev Risk profiles follow the canonical stablecoin / blue-chip curves. Per-asset LTV/LT and
 ///      supply/borrow caps come from the MegaETH listing sheet.
@@ -16,22 +16,23 @@ import {EngineFlags} from "lib/velkonix-contracts/src/contracts/extensions/v3-co
 ///      so only 8-decimal Chainlink feeds can be wired directly:
 ///        WETH  → ETH/USD  (8 dec)   USDT0 → USDT/USD (8 dec)   BTC.b → BTC/USD (8 dec)
 ///      USDe / USDm / wstETH only have 18-decimal Chainlink feeds on MegaETH. They are
-///      priced through an `ExchangeRateAdapter(src18d, unity8d)` (re-scales 18 → 8 dec)
-///      deployed by `script/deploy/DeployAdapters.s.sol`; their `*_FEED_PENDING`
-///      placeholders MUST be replaced with the deployed adapter addresses before
-///      broadcast. The 18-dec source feed for each is recorded in the `*_USD_SRC` below.
-///      `hasPendingPriceFeeds()` returns true while any placeholder remains.
-contract K613MegaEth_InitialListing is K613PayloadMegaEth {
+///      priced through an `ExchangeRateAdapter(src18d, unity8d)` (re-scales 18 → 8 dec),
+///      deployed on MegaETH by `script/deploy/DeployAdapters.s.sol`. `*_FEED` holds the
+///      deployed adapter address; the 18-dec source feed is recorded in `*_USD_SRC`.
+///      `hasPendingPriceFeeds()` is a guard that returns true if any feed is unresolved.
+contract VelkonixMegaEth_InitialListing is VelkonixPayloadMegaEth {
     // ───────── Stablecoins ─────────
     address internal constant USDM = 0xFAfDdbb3FC7688494971a79cc65DCa3EF82079E7;
-    // USDM/USD Chainlink feed is 18-dec → priced via ExchangeRateAdapter(USDM_USD_SRC, unity8d).
+    // USDM/USD Chainlink feed (USDM_USD_SRC) is 18-dec → priced via the deployed
+    // ExchangeRateAdapter(USDM_USD_SRC, unity8d) which re-scales 18 → 8 dec.
     address internal constant USDM_USD_SRC = 0xdFe0063491d9DeD8F8abCdd7AE04238A1e70D270;
-    address internal constant USDM_FEED_PENDING = 0x0000000000000000000000000000000000000001;
+    address internal constant USDM_FEED = 0xf605887E6E394cD6015Af0C18CBF33C08234dc0C;
 
     address internal constant USDE = 0x5d3a1Ff2b6BAb83b63cd9AD0787074081a52ef34;
-    // USDE/USD Chainlink feed is 18-dec → priced via ExchangeRateAdapter(USDE_USD_SRC, unity8d).
+    // USDE/USD Chainlink feed (USDE_USD_SRC) is 18-dec → priced via the deployed
+    // ExchangeRateAdapter(USDE_USD_SRC, unity8d) which re-scales 18 → 8 dec.
     address internal constant USDE_USD_SRC = 0x4F2A91150D5D6B91B5F0b0DF6F109C4BCeCefA61;
-    address internal constant USDE_FEED_PENDING = 0x0000000000000000000000000000000000000002;
+    address internal constant USDE_FEED = 0xBA66DBC04B7FEbA37C2279bfC0a62eb0BB1B54Fc;
 
     address internal constant USDT0 = 0xB8CE59FC3717ada4C02eaDF9682A9e934F625ebb;
     // USDT0 (USDT OFT, 1:1) priced via the 8-dec USDT/USD Chainlink feed.
@@ -43,9 +44,10 @@ contract K613MegaEth_InitialListing is K613PayloadMegaEth {
     address internal constant BTCB_FEED = 0xc6E3007B597f6F5a6330d43053D1EF73cCbbE721;
 
     address internal constant WSTETH = 0x601aC63637933D88285A025C685AC4e9a92a98dA;
-    // wstETH/USD Calculated Chainlink feed is 18-dec → priced via ExchangeRateAdapter(WSTETH_USD_SRC, unity8d).
+    // wstETH/USD Calculated Chainlink feed (WSTETH_USD_SRC) is 18-dec → priced via the
+    // deployed ExchangeRateAdapter(WSTETH_USD_SRC, unity8d) which re-scales 18 → 8 dec.
     address internal constant WSTETH_USD_SRC = 0xF2E02bfB172757471d091C6Fc66039020d29Eb26;
-    address internal constant WSTETH_FEED_PENDING = 0x0000000000000000000000000000000000000003;
+    address internal constant WSTETH_FEED = 0x15dD3e267e67E0E6609604B504F22c7e992Ba4Ce;
 
     address internal constant WETH = 0x4200000000000000000000000000000000000006;
     // Network base-token ETH/USD aggregator (8 decimals), from the core deployment market config.
@@ -56,18 +58,20 @@ contract K613MegaEth_InitialListing is K613PayloadMegaEth {
     function newListings() public pure override returns (IAaveV3ConfigEngine.Listing[] memory listings) {
         listings = new IAaveV3ConfigEngine.Listing[](6);
 
-        listings[0] = _stablecoin(USDM, "USDm", USDM_FEED_PENDING, 35_000_000, 40_000_000);
-        listings[1] = _stablecoin(USDE, "USDe", USDE_FEED_PENDING, 25_000_000, 30_000_000);
+        listings[0] = _stablecoin(USDM, "USDm", USDM_FEED, 35_000_000, 40_000_000);
+        listings[1] = _stablecoin(USDE, "USDe", USDE_FEED, 25_000_000, 30_000_000);
         listings[2] = _stablecoin(USDT0, "USDT0", USDT0_FEED, 8_000_000, 10_000_000);
 
         listings[3] = _btc(BTCB, "BTC.b", BTCB_FEED, 15, 20);
-        listings[4] = _wstEth(WSTETH, "wstETH", WSTETH_FEED_PENDING, 2_500, 3_000);
+        listings[4] = _wstEth(WSTETH, "wstETH", WSTETH_FEED, 2_500, 3_000);
         listings[5] = _weth(WETH, "WETH", WETH_FEED, 3_500, 4_000);
     }
 
     /// @notice True while any reserve still points at a placeholder price feed.
     /// @dev Guard for tooling/tests: must be `false` before this payload is broadcast.
-    /// @return pending Whether unresolved `*_FEED_PENDING` feeds remain in the listing.
+    ///      All feeds are resolved (3 direct 8-dec Chainlink + 3 deployed adapters), so
+    ///      this returns `false`; it stays as a regression guard against a reverted feed.
+    /// @return pending Whether any unresolved sentinel feed remains in the listing.
     function hasPendingPriceFeeds() external pure returns (bool pending) {
         IAaveV3ConfigEngine.Listing[] memory listings = newListings();
         for (uint256 i = 0; i < listings.length; i++) {

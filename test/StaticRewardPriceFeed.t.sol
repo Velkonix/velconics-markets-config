@@ -8,7 +8,7 @@ contract StaticRewardPriceFeedTest is Test {
     StaticRewardPriceFeed internal feed;
 
     function setUp() public {
-        feed = new StaticRewardPriceFeed(int256(800_000), 8, "xK613 / USD");
+        feed = new StaticRewardPriceFeed(int256(800_000), 8, "Velkonix / USD");
     }
 
     function test_ConstructorRevertsOnZeroAnswer() public {
@@ -23,7 +23,7 @@ contract StaticRewardPriceFeedTest is Test {
 
     function test_DecimalsDescription() public view {
         assertEq(feed.decimals(), 8);
-        assertEq(feed.description(), "xK613 / USD");
+        assertEq(feed.description(), "Velkonix / USD");
     }
 
     function test_LatestAnswer() public view {

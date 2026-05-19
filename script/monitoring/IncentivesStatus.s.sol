@@ -13,9 +13,9 @@ import {
 import {MegaEthMainnet} from "../../src/networks/MegaEthMainnet.sol";
 
 /// @title IncentivesStatus
-/// @notice Read-only snapshot of xK613 emissions per reserve, plus vault + allowance sanity checks.
+/// @notice Read-only snapshot of Velkonix emissions per reserve, plus vault + allowance sanity checks.
 /// @dev Env vars:
-///        INCENTIVES_REWARD_TOKEN  — reward token address (xK613)
+///        INCENTIVES_REWARD_TOKEN  — reward token address (Velkonix)
 ///        INCENTIVES_REWARDS_VAULT — vault address holding the reward tokens
 contract IncentivesStatus is Script {
     function run() external view {
@@ -26,7 +26,7 @@ contract IncentivesStatus is Script {
         IRewardsDistributor dist = IRewardsDistributor(MegaEthMainnet.INCENTIVES_CONTROLLER);
         IRewardsController ctrl = IRewardsController(MegaEthMainnet.INCENTIVES_CONTROLLER);
 
-        console.log("=== xK613 incentives status ===");
+        console.log("=== Velkonix incentives status ===");
         console.log("Reward token:", rewardToken);
         console.log("Rewards vault:", rewardsVault);
         console.log("");

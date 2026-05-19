@@ -7,10 +7,10 @@ import {
 } from "lib/velkonix-contracts/src/contracts/extensions/v3-config-engine/IAaveV3ConfigEngine.sol";
 import {MegaEthMainnet} from "../networks/MegaEthMainnet.sol";
 
-/// @title K613PayloadMegaEth
+/// @title VelkonixPayloadMegaEth
 /// @notice Base `AaveV3Payload` wired to the MegaETH mainnet `AaveV3ConfigEngine` instance.
 /// @dev Concrete payloads inherit this and override only the hooks they need.
-abstract contract K613PayloadMegaEth is AaveV3Payload {
+abstract contract VelkonixPayloadMegaEth is AaveV3Payload {
     /// @notice Wires the payload base to `MegaEthMainnet.CONFIG_ENGINE`.
     constructor() AaveV3Payload(IAaveV3ConfigEngine(MegaEthMainnet.CONFIG_ENGINE)) {}
 
