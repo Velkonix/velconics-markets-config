@@ -2,7 +2,7 @@
 pragma solidity ^0.8.30;
 
 /// @title IncentivesConfig
-/// @notice Per-asset supply/borrow emission weights for xK613 incentives.
+/// @notice Per-asset supply/borrow emission weights for Velkonix incentives.
 /// @dev Weights are keyed by underlying asset address. The sum of `supplyBps + borrowBps`
 ///      across all configured assets must equal `WEIGHT_BPS` (10_000 = 100%).
 ///      Supply/borrow split is per-asset — different assets can use different ratios.
@@ -30,11 +30,11 @@ contract IncentivesConfig {
 
     uint256 public constant WEIGHT_BPS = 10_000;
 
-    /// @notice Total xK613 emitted in year one (25M tokens, 18 decimals).
+    /// @notice Total Velkonix emitted in year one (25M tokens, 18 decimals).
     uint256 public constant YEAR1_TOTAL = 25_000_000e18;
-    /// @notice Total xK613 emitted in year two (10M tokens, 18 decimals).
+    /// @notice Total Velkonix emitted in year two (10M tokens, 18 decimals).
     uint256 public constant YEAR2_TOTAL = 10_000_000e18;
-    /// @notice Total xK613 emitted in year three (5M tokens, 18 decimals).
+    /// @notice Total Velkonix emitted in year three (5M tokens, 18 decimals).
     uint256 public constant YEAR3_TOTAL = 5_000_000e18;
 
     address public admin;
@@ -119,7 +119,7 @@ contract IncentivesConfig {
     }
 
     /// @notice Derives per-second emission rates for every stored weight.
-    /// @param yearlyTotal Total xK613 emitted during the year (e.g. `YEAR1_TOTAL`).
+    /// @param yearlyTotal Total Velkonix emitted during the year (e.g. `YEAR1_TOTAL`).
     function getEmissionConfigs(uint256 yearlyTotal) external view returns (EmissionConfig[] memory configs) {
         uint256 n = weights.length;
         configs = new EmissionConfig[](n);
