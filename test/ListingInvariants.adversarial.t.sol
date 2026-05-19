@@ -165,42 +165,37 @@ contract ListingInvariantsAdversarialTest is Test {
     // ───────── eMode safety invariants ─────────
 
     /// @dev eMode LT + liqBonus must be <= 100_00 (same insolvency check as base listings).
+    ///      `liqBonus` here is the bonus part only (engine stores `100_00 + liqBonus`).
     function test_EModeLiqBonusSolvency() public view {
-        IAaveV3ConfigEngine.EModeCategoryUpdate[] memory cats = emodes.eModeCategoriesUpdates();
+        IAaveV3ConfigEngine.EModeCategoryCreation[] memory cats = emodes.eModeCategoryCreations();
         for (uint256 i = 0; i < cats.length; i++) {
             assertTrue(cats[i].liqThreshold + cats[i].liqBonus <= 10_000, "INSOLVENCY: eMode LT+bonus > 100%");
         }
     }
 
-    /// @dev eMode must raise LTV and LT vs base listing — that's the whole point.
+    /// @dev eMode must raise LTV and LT vs base listing for every member — that's the point.
     ///      If eMode is worse than base, users get nothing from opting in.
     function test_EModeImprovesBothLtvAndLt() public view {
         IAaveV3ConfigEngine.Listing[] memory listings = listing.newListings();
-        IAaveV3ConfigEngine.EModeCategoryUpdate[] memory cats = emodes.eModeCategoriesUpdates();
-        IAaveV3ConfigEngine.AssetEModeUpdate[] memory updates = emodes.assetsEModeUpdates();
+        IAaveV3ConfigEngine.EModeCategoryCreation[] memory cats = emodes.eModeCategoryCreations();
 
-        for (uint256 i = 0; i < updates.length; i++) {
-            // Find base listing
-            uint256 baseLtv;
-            uint256 baseLt;
-            bool found;
-            for (uint256 j = 0; j < listings.length; j++) {
-                if (listings[j].asset == updates[i].asset) {
-                    baseLtv = listings[j].ltv;
-                    baseLt = listings[j].liqThreshold;
-                    found = true;
-                    break;
+        for (uint256 k = 0; k < cats.length; k++) {
+            for (uint256 i = 0; i < cats[k].collaterals.length; i++) {
+                address asset = cats[k].collaterals[i];
+                uint256 baseLtv;
+                uint256 baseLt;
+                bool found;
+                for (uint256 j = 0; j < listings.length; j++) {
+                    if (listings[j].asset == asset) {
+                        baseLtv = listings[j].ltv;
+                        baseLt = listings[j].liqThreshold;
+                        found = true;
+                        break;
+                    }
                 }
-            }
-            assertTrue(found, "eMode asset missing from listings");
-
-            // Find eMode category
-            for (uint256 k = 0; k < cats.length; k++) {
-                if (cats[k].eModeCategory == updates[i].eModeCategory) {
-                    assertGt(cats[k].ltv, baseLtv, "eMode LTV not better than base");
-                    assertGt(cats[k].liqThreshold, baseLt, "eMode LT not better than base");
-                    break;
-                }
+                assertTrue(found, "eMode asset missing from listings");
+                assertGt(cats[k].ltv, baseLtv, "eMode LTV not better than base");
+                assertGt(cats[k].liqThreshold, baseLt, "eMode LT not better than base");
             }
         }
     }
@@ -208,11 +203,15 @@ contract ListingInvariantsAdversarialTest is Test {
     /// @dev No asset should appear in more than one eMode category.
     ///      If it does, the last write wins on-chain and the first is silently overwritten.
     function test_NoAssetInMultipleEModes() public view {
-        IAaveV3ConfigEngine.AssetEModeUpdate[] memory updates = emodes.assetsEModeUpdates();
-        for (uint256 i = 0; i < updates.length; i++) {
-            for (uint256 j = i + 1; j < updates.length; j++) {
-                if (updates[i].asset == updates[j].asset) {
-                    assertEq(updates[i].eModeCategory, updates[j].eModeCategory, "asset in multiple eMode categories");
+        IAaveV3ConfigEngine.EModeCategoryCreation[] memory cats = emodes.eModeCategoryCreations();
+        for (uint256 a = 0; a < cats.length; a++) {
+            for (uint256 b = a + 1; b < cats.length; b++) {
+                for (uint256 i = 0; i < cats[a].collaterals.length; i++) {
+                    for (uint256 j = 0; j < cats[b].collaterals.length; j++) {
+                        assertNotEq(
+                            cats[a].collaterals[i], cats[b].collaterals[j], "asset in multiple eMode categories"
+                        );
+                    }
                 }
             }
         }
