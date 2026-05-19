@@ -21,81 +21,67 @@ contract PayloadIntegrationTest is Test {
         emodes = new VelkonixMegaEth_ConfigureEModes();
     }
 
-    /// @dev Invariant: every asset assigned to an eMode category must have been listed first.
-    ///      Without this check, running the eMode payload second on mainnet would brick because
-    ///      the config engine rejects assets that aren't registered in the pool.
+    /// @dev Invariant: every asset placed in an eMode category (collateral or borrowable)
+    ///      must have been listed first. Running eMode creation before the listing would
+    ///      brick because the config engine rejects assets not registered in the pool.
     function test_EModeAssetsAreAllListed() public view {
         IAaveV3ConfigEngine.Listing[] memory listings = listing.newListings();
-        IAaveV3ConfigEngine.AssetEModeUpdate[] memory updates = emodes.assetsEModeUpdates();
+        IAaveV3ConfigEngine.EModeCategoryCreation[] memory cats = emodes.eModeCategoryCreations();
 
-        for (uint256 i = 0; i < updates.length; i++) {
-            bool found = false;
-            for (uint256 j = 0; j < listings.length; j++) {
-                if (listings[j].asset == updates[i].asset) {
-                    found = true;
-                    break;
-                }
-            }
-            assertTrue(found, "eMode asset is not listed by InitialListing");
+        for (uint256 k = 0; k < cats.length; k++) {
+            _assertAllListed(cats[k].collaterals, listings);
+            _assertAllListed(cats[k].borrowables, listings);
         }
     }
 
-    /// @dev Invariant: every eMode category referenced by asset bindings must be defined in the
-    ///      same payload's category updates — no orphan category ids.
-    function test_EModeCategoriesAreDefined() public view {
-        IAaveV3ConfigEngine.EModeCategoryUpdate[] memory cats = emodes.eModeCategoriesUpdates();
-        IAaveV3ConfigEngine.AssetEModeUpdate[] memory updates = emodes.assetsEModeUpdates();
-
-        for (uint256 i = 0; i < updates.length; i++) {
+    function _assertAllListed(address[] memory assets, IAaveV3ConfigEngine.Listing[] memory listings) private pure {
+        for (uint256 i = 0; i < assets.length; i++) {
             bool found = false;
-            for (uint256 j = 0; j < cats.length; j++) {
-                if (cats[j].eModeCategory == updates[i].eModeCategory) {
+            for (uint256 j = 0; j < listings.length; j++) {
+                if (listings[j].asset == assets[i]) {
                     found = true;
                     break;
                 }
             }
-            assertTrue(found, "asset references undefined eMode category");
+            require(found, "eMode asset is not listed by InitialListing");
+        }
+    }
+
+    /// @dev Invariant: every created eMode category is well-formed (has members and a label),
+    ///      so there are no empty/orphan categories.
+    function test_EModeCategoriesAreDefined() public view {
+        IAaveV3ConfigEngine.EModeCategoryCreation[] memory cats = emodes.eModeCategoryCreations();
+        assertGt(cats.length, 0, "no eMode categories");
+        for (uint256 k = 0; k < cats.length; k++) {
+            assertGt(cats[k].collaterals.length, 0, "category has no collaterals");
+            assertGt(cats[k].borrowables.length, 0, "category has no borrowables");
+            assertGt(bytes(cats[k].label).length, 0, "category has no label");
         }
     }
 
     /// @dev Invariant: eMode categories never loosen risk vs. the listing-level params.
-    ///      If a stable listing has LT 80% and is pulled into a stable eMode with LT 95%,
-    ///      that must be intentional — this test locks the relationship in place so a future
-    ///      regression that drops an eMode category's LT below the underlying listing LT fails.
+    ///      For every member asset, the category LTV/LT must be >= the asset's listing
+    ///      LTV/LT — a regression that drops a category below its members' base fails here.
     function test_EModeCategoriesNotSofterThanListings() public view {
         IAaveV3ConfigEngine.Listing[] memory listings = listing.newListings();
-        IAaveV3ConfigEngine.EModeCategoryUpdate[] memory cats = emodes.eModeCategoriesUpdates();
-        IAaveV3ConfigEngine.AssetEModeUpdate[] memory updates = emodes.assetsEModeUpdates();
+        IAaveV3ConfigEngine.EModeCategoryCreation[] memory cats = emodes.eModeCategoryCreations();
 
-        for (uint256 i = 0; i < updates.length; i++) {
-            // Find the listing row for this asset.
-            IAaveV3ConfigEngine.Listing memory l;
-            bool lFound;
-            for (uint256 j = 0; j < listings.length; j++) {
-                if (listings[j].asset == updates[i].asset) {
-                    l = listings[j];
-                    lFound = true;
-                    break;
+        for (uint256 k = 0; k < cats.length; k++) {
+            for (uint256 i = 0; i < cats[k].collaterals.length; i++) {
+                address asset = cats[k].collaterals[i];
+                IAaveV3ConfigEngine.Listing memory l;
+                bool lFound;
+                for (uint256 j = 0; j < listings.length; j++) {
+                    if (listings[j].asset == asset) {
+                        l = listings[j];
+                        lFound = true;
+                        break;
+                    }
                 }
+                assertTrue(lFound, "listing not found for eMode asset");
+                assertGe(cats[k].ltv, l.ltv, "eMode ltv tighter than listing");
+                assertGe(cats[k].liqThreshold, l.liqThreshold, "eMode lt tighter than listing");
             }
-            assertTrue(lFound, "listing not found for eMode asset");
-
-            // Find the category params.
-            IAaveV3ConfigEngine.EModeCategoryUpdate memory c;
-            bool cFound;
-            for (uint256 j = 0; j < cats.length; j++) {
-                if (cats[j].eModeCategory == updates[i].eModeCategory) {
-                    c = cats[j];
-                    cFound = true;
-                    break;
-                }
-            }
-            assertTrue(cFound, "category not found for eMode asset");
-
-            // eMode categories should raise the risk envelope, not tighten it
-            // (underlying listing stays as the base floor for non-eMode users).
-            assertGe(c.ltv, l.ltv, "eMode ltv tighter than listing");
-            assertGe(c.liqThreshold, l.liqThreshold, "eMode lt tighter than listing");
         }
     }
 
