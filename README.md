@@ -188,7 +188,7 @@ script/
 ├── incentives/        SetIncentivesWeights.s.sol           # Writes the 6-asset 65/35 split
 │                      ConfigureSupplyIncentives.s.sol      # Registers aToken + vDebtToken emissions
 ├── monitoring/        ReserveStatus / HealthCheck / …      # Read-only dashboards
-└── admin/             GrantRoles.s.sol                     # Multisig role migration (grant / revoke)
+└── admin/             MigrateAdminAtomic.s.sol             # One-shot atomic admin migration to multisig (IRREVERSIBLE)
 ```
 
 ### Payload lifecycle
