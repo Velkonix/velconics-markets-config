@@ -21,12 +21,21 @@ interface IOwnable {
 /// @notice One-shot admin migration: grants every role to the multisig + emergency hot,
 ///         transfers contract ownerships, then revokes the deployer's roles and renounces
 ///         `DEFAULT_ADMIN_ROLE` — all in a single broadcast.
-/// @dev IRREVERSIBLE. After this runs the deployer has zero privileges; if the multisig is
-///      misconfigured the market is bricked. Verify `MAIN_MULTISIG` and `EMERGENCY_HOT`
-///      carefully before broadcasting. Set `CONFIRM_IRREVERSIBLE=YES` to acknowledge.
+/// @dev IRREVERSIBLE for `DEFAULT_ADMIN_ROLE`. If the multisig is misconfigured the market
+///      is bricked. Verify env values carefully. Set `CONFIRM_IRREVERSIBLE=YES` to acknowledge.
+///
+///      End state:
+///        - DEFAULT/POOL/RISK admin + Provider/EmissionManager ownership → `MAIN_MULTISIG`
+///        - EMERGENCY_ADMIN → `EMERGENCY_HOT`
+///        - deployer keeps EMERGENCY_ADMIN **iff** `EMERGENCY_HOT == deployer` (the
+///          "deployer is the online emergency hot wallet" pattern — cold multisig governs,
+///          deployer key only retains fast pause/freeze)
+///        - deployer otherwise has zero privileges
+///
 ///      Env vars:
 ///        MAIN_MULTISIG         — recipient of POOL/RISK/DEFAULT admin + ownerships
-///        EMERGENCY_HOT         — recipient of EMERGENCY_ADMIN
+///        EMERGENCY_HOT         — recipient of EMERGENCY_ADMIN (may equal deployer or
+///                                MAIN_MULTISIG)
 ///        CONFIRM_IRREVERSIBLE  — must equal "YES"
 ///        PRIVATE_KEY           — optional; otherwise first `vm.getWallets()` entry is used
 contract MigrateAdminAtomic is Script {
@@ -110,7 +119,8 @@ contract MigrateAdminAtomic is Script {
             acl.removeRiskAdmin(deployer);
             console.log("- RISK_ADMIN revoked from deployer");
         }
-        if (acl.isEmergencyAdmin(deployer)) {
+        // Keep EMERGENCY_ADMIN on the deployer iff that is exactly the desired hot wallet.
+        if (acl.isEmergencyAdmin(deployer) && emergencyHot != deployer) {
             acl.removeEmergencyAdmin(deployer);
             console.log("- EMERGENCY_ADMIN revoked from deployer");
         }
@@ -129,7 +139,10 @@ contract MigrateAdminAtomic is Script {
         if (aclAC.hasRole(adminRole, deployer)) revert PostCheckFailed("deployer still DEFAULT_ADMIN");
         if (acl.isPoolAdmin(deployer)) revert PostCheckFailed("deployer still POOL_ADMIN");
         if (acl.isRiskAdmin(deployer)) revert PostCheckFailed("deployer still RISK_ADMIN");
-        if (acl.isEmergencyAdmin(deployer)) revert PostCheckFailed("deployer still EMERGENCY_ADMIN");
+        // EMERGENCY_ADMIN may still belong to the deployer if it was the chosen hot wallet.
+        if (acl.isEmergencyAdmin(deployer) && emergencyHot != deployer) {
+            revert PostCheckFailed("deployer still EMERGENCY_ADMIN");
+        }
         if (IOwnable(MegaEthMainnet.POOL_ADDRESSES_PROVIDER).owner() != mainMultisig) {
             revert PostCheckFailed("PoolAddressesProvider owner");
         }
@@ -138,7 +151,11 @@ contract MigrateAdminAtomic is Script {
         }
 
         console.log("");
-        console.log("=== DONE. Deployer has no privileges left. ===");
+        if (emergencyHot == deployer) {
+            console.log("=== DONE. Deployer kept EMERGENCY_ADMIN only (hot-wallet pattern). ===");
+        } else {
+            console.log("=== DONE. Deployer has no privileges left. ===");
+        }
     }
 
     function _transferIfNeeded(address target, address newOwner, string memory label) private {
